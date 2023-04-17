@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Eth, Goerli } from './website-switch.icons';
+import { Arbitrum, Eth, Goerli } from './website-switch.icons';
 import { StyledWebsiteSwitch, WebsiteSwitchMenuItem } from './website-switch.styled';
 import { preventDefault } from '../../../../../utils/events.utils';
 import { getEnvVariables } from '../../../../../utils/env.utils';
@@ -11,6 +11,9 @@ const hostnameToIcon = (hostname?: string) => {
     }
     case 'goerli': {
       return <Goerli />;
+    }
+    case 'arbitrum': {
+      return <Arbitrum />;
     }
     default: {
       return <Eth />;

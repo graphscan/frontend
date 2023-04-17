@@ -7,7 +7,9 @@ export type SubgraphDetails = {
   subgraph: {
     id: string;
     creatorAddress: string | null;
-    website: string | null;
+    metadata: {
+      website: string | null;
+    } | null;
     owner: {
       id: string;
     };
@@ -20,7 +22,9 @@ export type SubgraphDetails = {
     indexersCount: number;
     stakedTokens: string;
     indexingRewardAmount: string;
-    network: { id: string } | null;
+    metadata: {
+      network: string | null;
+    } | null;
   };
 };
 
@@ -29,7 +33,7 @@ export const transform = ({
   subgraph: {
     id: subgraphId,
     creatorAddress,
-    website,
+    metadata,
     owner: { id: ownerId },
   },
   subgraphDeployment: {
@@ -40,17 +44,17 @@ export const transform = ({
     indexersCount,
     stakedTokens,
     indexingRewardAmount,
-    network,
+    metadata: deploymentMetadata,
   },
 }: SubgraphDetails) => {
   return {
     id: subgraphId,
-    network: network?.id ?? null,
+    network: deploymentMetadata?.network ?? null,
     createdAt: formatCardDate(createdAt),
     creatorAddress,
     deploymentId,
     ownerId,
-    website: website?.replace(/^https?\:\/\//i, '').split('/')[0] ?? null,
+    website: metadata?.website?.replace(/^https?\:\/\//i, '').split('/')[0] ?? null,
     signals: divideBy1e18(signalAmount),
     currentSignaled: divideBy1e18(signalledTokens),
     queryFeesAmount: divideBy1e18(queryFeesAmount),

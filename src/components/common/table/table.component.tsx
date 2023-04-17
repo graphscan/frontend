@@ -183,7 +183,11 @@ export const Table = <Row extends Record<string, unknown>>({
         />
       </Wrapper>
       {rows.length > 0 && (
-        <TableFooter downloadCsvOptions={downloadCsvOptions} paginationOptions={paginationOptions} />
+        <TableFooter
+          hasData={rows.length > 0}
+          downloadCsvOptions={downloadCsvOptions}
+          paginationOptions={paginationOptions}
+        />
       )}
     </>
   );

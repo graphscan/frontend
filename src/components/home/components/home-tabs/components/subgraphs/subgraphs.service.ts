@@ -19,8 +19,10 @@ const fetchSubgraphs = async (skip: number) => {
         ) {
           id
           active
-          image
-          displayName
+          metadata {
+            image
+            displayName
+          }
           owner {
             id
           }
@@ -34,8 +36,10 @@ const fetchSubgraphs = async (skip: number) => {
               indexingRewardAmount
               queryFeesAmount
               deniedAt
-              network {
-                id
+              metadata {
+                network {
+                  id
+                }
               }
               versions(
                 first: ${REQUEST_LIMIT}, 

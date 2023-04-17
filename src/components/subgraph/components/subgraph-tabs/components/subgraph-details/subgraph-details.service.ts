@@ -86,7 +86,9 @@ export const useSubgraphDetails = ({ deploymentId, versionId, subgraphId }: Subg
             subgraph {
               id
               creatorAddress
-              website
+              metadata {
+                website
+              }
               owner {
                 id
               }
@@ -99,8 +101,8 @@ export const useSubgraphDetails = ({ deploymentId, versionId, subgraphId }: Subg
               indexersCount
               stakedTokens
               indexingRewardAmount
-              network {
-                id
+              metadata {
+                network
               }
             }
           }

@@ -9,6 +9,7 @@ import { Layout } from '../layout/layout.component';
 import { GlobalStyles } from '../styles/styles';
 import { Fonts } from '../styles/fonts';
 import { Tooltip } from '../components/tooltip/tooltip.component';
+import { COOKIES_KEYS } from '../model/cookies.model';
 import { HISTORY_APY_REQUEST_TIME_STORAGE_KEY } from '../model/indexers.model';
 
 configure({
@@ -33,9 +34,35 @@ const App = ({ Component, pageProps }: AppProps) => {
     sessionStorage.setItem(HISTORY_APY_REQUEST_TIME_STORAGE_KEY, String(Date.now()));
   }, []);
 
+  const isThirdPartyOn =
+    typeof localStorage !== 'undefined' && localStorage.getItem(COOKIES_KEYS.kinds.thirdParty) === 'true';
+
   return (
     <>
       <Head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('consent', 'default', {
+                'ad_storage': ${JSON.stringify(isThirdPartyOn ? 'granted' : 'denied')},
+                'analytics_storage': ${JSON.stringify(isThirdPartyOn ? 'granted' : 'denied')},
+              });
+            `,
+          }}
+        ></script>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-5473RBPD53"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-5473RBPD53');
+            `,
+          }}
+        ></script>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta
@@ -57,17 +84,6 @@ const App = ({ Component, pageProps }: AppProps) => {
           src="https://js.sentry-cdn.com/e5aa565695ef462995311b6836680986.min.js"
           crossOrigin="anonymous"
           data-lazy="no"
-        ></script>
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-5473RBPD53"></script>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-5473RBPD53');
-            `,
-          }}
         ></script>
       </Head>
       <QueryClientProvider client={queryClient}>

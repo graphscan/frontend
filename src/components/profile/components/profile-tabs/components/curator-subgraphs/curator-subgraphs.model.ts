@@ -25,9 +25,11 @@ type BaseSignal = {
 type Subgraph = {
   id: string;
   active: boolean;
-  image: string | null;
-  displayName: string | null;
   createdAt: number;
+  metadata: {
+    image: string | null;
+    displayName: string | null;
+  } | null;
   owner: {
     id: string;
   };
@@ -253,8 +255,7 @@ export const transformToRow = (typedSignal: TypedNameSignal | TypedSignal): Cura
     const {
       id: subgraphId,
       active,
-      image,
-      displayName,
+      metadata,
       owner,
       createdAt,
       currentVersion,
@@ -265,8 +266,8 @@ export const transformToRow = (typedSignal: TypedNameSignal | TypedSignal): Cura
       ...baseSignal,
       id: subgraphId,
       key: id,
-      img: image ?? '',
-      displayName: displayName ?? '',
+      img: metadata?.image ?? '',
+      displayName: metadata?.displayName ?? '',
       ownerId: owner.id,
       deploymentId: currentVersion ? currentVersion.subgraphDeployment.id : null,
       shares: divideBy1e18(typedSignal.nameSignal),
@@ -303,8 +304,8 @@ export const transformToRow = (typedSignal: TypedNameSignal | TypedSignal): Cura
     ...baseSignal,
     id,
     key: subgraph.id,
-    img: subgraph.image ?? '',
-    displayName: subgraph.displayName ?? '',
+    img: subgraph.metadata?.image ?? '',
+    displayName: subgraph.metadata?.displayName ?? '',
     ownerId: subgraph.owner.id,
     deploymentId: subgraph.currentVersion ? subgraph.currentVersion.subgraphDeployment.id : null,
     shares: divideBy1e18(typedSignal.signal),

@@ -51,8 +51,10 @@ export const createSubgraphOwnerSubgraphsFetcher = (id: string) => async (skip: 
           where: {entityVersion: 2}) {
           id
           active
-          image
-          displayName
+          metadata {
+            image
+            displayName
+          }
           currentVersion {
             ...SubgraphOwnerSubgraphsVersionFragment
           }

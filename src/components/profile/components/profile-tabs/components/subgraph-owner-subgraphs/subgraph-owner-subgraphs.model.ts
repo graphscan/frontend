@@ -42,8 +42,10 @@ type Version = {
 export type SubgraphOwnerSubgraph = {
   id: string;
   active: boolean;
-  image: string | null;
-  displayName: string | null;
+  metadata: {
+    image: string | null;
+    displayName: string | null;
+  } | null;
   currentVersion: Version | null;
   versions: Array<Version>;
 };
@@ -171,8 +173,7 @@ export const columns: Array<ColumnType<SubgraphOwnerSubgraphsRow>> = [
 export const transformToRow = ({
   id,
   active,
-  image,
-  displayName,
+  metadata,
   currentVersion,
   versions,
 }: SubgraphOwnerSubgraph): SubgraphOwnerSubgraphsRow => {
@@ -194,10 +195,10 @@ export const transformToRow = ({
   return {
     id,
     key: id,
-    image,
+    image: metadata?.image ?? null,
     deploymentId,
     createdAt,
-    displayName,
+    displayName: metadata?.displayName ?? null,
     signalledTokens: divideBy1e18(signalledTokens),
     stakedTokens: divideBy1e18(stakedTokens),
     proportion: Number(stakedTokens) ? divide(Number(signalledTokens), Number(stakedTokens)) : 0,

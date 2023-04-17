@@ -48,9 +48,11 @@ const indexerAllocationFragment = gql`
         subgraph {
           id
           active
-          image
-          displayName
           createdAt
+          metadata {
+            image
+            displayName
+          }
           currentVersion {
             id
             subgraphDeployment {

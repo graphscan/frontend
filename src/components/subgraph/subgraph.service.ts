@@ -19,9 +19,11 @@ export const useSubgraphVersion = (id: string) => {
               id
               active
               creatorAddress
-              displayName
-              image
-              description
+              metadata {
+                displayName
+                image
+                description
+              }
               owner {
                 id
               }
@@ -36,8 +38,10 @@ export const useSubgraphVersion = (id: string) => {
                     id
                     subgraph {
                       id
-                      image
-                      displayName
+                      metadata {
+                        image
+                        displayName
+                      }
                       owner {
                         id
                       }
@@ -60,7 +64,9 @@ export const useSubgraphVersion = (id: string) => {
                 where: {entityVersion: ${id.startsWith('0x') ? 1 : 2}}
               ) {
                 id
-                label
+                metadata {
+                  label
+                }
               }
             }
             subgraphDeployment {

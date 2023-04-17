@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { DownloadButton } from './download-button/download-button.component';
 import { Pagination } from './pagination/pagination.component';
+import { DocsLinks } from '../../docs-links/docs-links.component';
 import { PaginationOptions } from '../../../../model/pagination.model';
 import { DownloadButtonOptions } from '../../../../model/download-button.model';
 import { useTooltip } from '../../../../utils/tooltip.utils';
@@ -14,6 +15,7 @@ import {
 } from './table-footer.styled';
 
 type Props = {
+  hasData: boolean;
   downloadCsvOptions: DownloadButtonOptions;
   paginationOptions: PaginationOptions;
 };
@@ -31,6 +33,7 @@ export const usePaginationContext = () => {
 };
 
 export const TableFooter: React.FC<Props> = ({
+  hasData,
   downloadCsvOptions,
   paginationOptions,
   paginationOptions: { total },
@@ -39,21 +42,25 @@ export const TableFooter: React.FC<Props> = ({
 
   return (
     <Wrapper>
-      <Container>
-        <LeftSide>
-          <Result>
-            {total} result{total !== 1 && 's'}
-          </Result>
-          <DownloadButtonContainer data-tip="Download data as CSV.">
-            <DownloadButton {...downloadCsvOptions} />
-          </DownloadButtonContainer>
-        </LeftSide>
-        <PaginationContainer>
-          <PaginationContext.Provider value={paginationOptions}>
-            <Pagination />
-          </PaginationContext.Provider>
-        </PaginationContainer>
-        <div />
+      <Container isDocsOnly={!hasData}>
+        {hasData && (
+          <>
+            <LeftSide>
+              <Result>
+                {total} result{total !== 1 && 's'}
+              </Result>
+              <DownloadButtonContainer data-tip="Download data as CSV.">
+                <DownloadButton {...downloadCsvOptions} />
+              </DownloadButtonContainer>
+            </LeftSide>
+            <PaginationContainer>
+              <PaginationContext.Provider value={paginationOptions}>
+                <Pagination />
+              </PaginationContext.Provider>
+            </PaginationContainer>
+          </>
+        )}
+        <DocsLinks />
       </Container>
     </Wrapper>
   );

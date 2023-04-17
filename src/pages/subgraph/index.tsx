@@ -1,10 +1,10 @@
-import { memo } from 'react';
+import type { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import { Subgraph } from '../../components/subgraph/subgraph.component';
 import { NotFound } from '../../components/not-found/not-found.component';
 import { getEnvVariables } from '../../utils/env.utils';
 
-const SubgraphPage = memo(() => {
+const SubgraphPage: NextPage = () => {
   const {
     query: { version },
   } = useRouter();
@@ -14,6 +14,6 @@ const SubgraphPage = memo(() => {
   ) : (
     <NotFound />
   );
-});
+};
 
 export default SubgraphPage;

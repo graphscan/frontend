@@ -1,7 +1,6 @@
 import { SyntheticEvent, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { Controls } from './estimated-apr-form.styled';
-import { Switch } from './components/switch/switch.component';
 import {
   Form,
   Content,
@@ -14,6 +13,7 @@ import {
 } from '../../calculator.styled';
 import { homeTabsViewModel } from '../../../../../../home-tabs.model';
 import { CalculatorInput } from '../calculator-input/calculator-input.component';
+import { Switch } from '../../../../../../../../../common/switch/switch.component';
 import { TransactionButton } from '../../../../../../../../../common/transaction-button/transaction-button.component';
 
 type Props = {

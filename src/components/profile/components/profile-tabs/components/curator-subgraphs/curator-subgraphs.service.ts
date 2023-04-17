@@ -7,9 +7,11 @@ const subgraphFragment = gql`
   fragment CuratorSubgraphFragment on Subgraph {
     id
     active
-    image
-    displayName
     createdAt
+    metadata {
+      image
+      displayName
+    }
     owner {
       id
     }

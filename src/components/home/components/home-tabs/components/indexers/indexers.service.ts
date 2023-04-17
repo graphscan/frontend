@@ -51,7 +51,10 @@ const createIndexersFetcher = (plannedPeriod: string) => async (skip: number) =>
           lockedTokens
           delegatedTokens
           allocatedTokens
-          allocations(first: ${REQUEST_LIMIT}) {
+          allocations(
+            first: ${REQUEST_LIMIT},
+            where: { allocatedTokens_not: "0" }
+          ) {
             id
             allocatedTokens
             subgraphDeployment {

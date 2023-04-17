@@ -19,4 +19,5 @@ export const getEnvVariables = () => ({
   ethereumExplorer: publicRuntimeConfig.ETHEREUM_EXPLORER,
   thegraphExplorer: publicRuntimeConfig.THEGRAPH_EXPLORER,
   endpointSwitchWhitelist: publicRuntimeConfig.ENDPOINT_SWITCH_WHITELIST,
+  thegraphExplorerChain: publicRuntimeConfig.THEGRAPH_EXPLORER_CHAIN,
 });

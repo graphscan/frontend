@@ -8,11 +8,19 @@ const ANIMATION_DURATION = 250;
 type Props = {
   title?: string;
   isVisible: boolean;
-  onCancel: () => void;
+  onCancel?: () => void;
   contentPadding?: number;
+  withoutCloseButton?: boolean;
 };
 
-export const Modal: React.FC<Props> = ({ title, isVisible, onCancel, children, contentPadding = 32 }) => {
+export const Modal: React.FC<Props> = ({
+  title,
+  isVisible,
+  withoutCloseButton = false,
+  onCancel,
+  children,
+  contentPadding = 32,
+}) => {
   const [modalState, setModalState] = useState<'visible' | 'hidden' | 'fading'>(
     isVisible ? 'visible' : 'hidden',
   );
@@ -55,7 +63,7 @@ export const Modal: React.FC<Props> = ({ title, isVisible, onCancel, children, c
   }, [isHidden, isVisible, modalState, onCancel]);
 
   const handleBackgroundMouseDown = (e: MouseEvent) => {
-    e.target === e.currentTarget && onCancel();
+    e.target === e.currentTarget && onCancel?.();
   };
 
   return (
@@ -67,29 +75,37 @@ export const Modal: React.FC<Props> = ({ title, isVisible, onCancel, children, c
           animationDuration={ANIMATION_DURATION}
         >
           <ModalComponent>
-            <CloseButton onClick={onCancel}>
-              <svg width="14" height="13" viewBox="0 0 14 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <line
-                  x1="12"
-                  y1="1.41421"
-                  x2="2.41421"
-                  y2="11"
-                  stroke="#95B0D9"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-                <line
-                  x1="1"
-                  y1="-1"
-                  x2="14.5563"
-                  y2="-1"
-                  transform="matrix(0.707107 0.707107 0.707107 -0.707107 2.27725 0)"
-                  stroke="#95B0D9"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </CloseButton>
+            {!withoutCloseButton && (
+              <CloseButton onClick={onCancel}>
+                <svg
+                  width="14"
+                  height="13"
+                  viewBox="0 0 14 13"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <line
+                    x1="12"
+                    y1="1.41421"
+                    x2="2.41421"
+                    y2="11"
+                    stroke="#95B0D9"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <line
+                    x1="1"
+                    y1="-1"
+                    x2="14.5563"
+                    y2="-1"
+                    transform="matrix(0.707107 0.707107 0.707107 -0.707107 2.27725 0)"
+                    stroke="#95B0D9"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </CloseButton>
+            )}
             {title && (
               <>
                 <Title>{title}</Title>

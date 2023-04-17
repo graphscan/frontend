@@ -1319,6 +1319,11 @@
   resolved "https://registry.yarnpkg.com/@types/geojson/-/geojson-7946.0.7.tgz#c8fa532b60a0042219cdf173ca21a975ef0666ad"
   integrity sha512-wE2v81i4C4Ol09RtsWFAqg3BUitWbHSpSlIo+bNdsCJijO9sjme+zm+73ZMCa/qMC8UEERxzGbvmr1cffo2SiQ==
 
+"@types/gtag.js@^0.0.12":
+  version "0.0.12"
+  resolved "https://registry.yarnpkg.com/@types/gtag.js/-/gtag.js-0.0.12.tgz#095122edca896689bdfcdd73b057e23064d23572"
+  integrity sha512-YQV9bUsemkzG81Ea295/nF/5GijnD2Af7QhEofh7xu+kvCN6RdodgNwwGWXB5GMI3NoyvQo0odNctoH/qLMIpg==
+
 "@types/hoist-non-react-statics@*":
   version "3.3.1"
   resolved "https://registry.yarnpkg.com/@types/hoist-non-react-statics/-/hoist-non-react-statics-3.3.1.tgz#1124aafe5118cb591977aeb1ceaaed1070eb039f"
@@ -2105,15 +2110,10 @@ camelize@^1.0.0:
   resolved "https://registry.yarnpkg.com/camelize/-/camelize-1.0.0.tgz#164a5483e630fa4321e5af07020e531831b2609b"
   integrity sha1-FkpUg+Yw+kMh5a8HAg5TGDGyYJs=
 
-caniuse-lite@^1.0.30001181, caniuse-lite@^1.0.30001202, caniuse-lite@^1.0.30001219, caniuse-lite@^1.0.30001228:
-  version "1.0.30001412"
-  resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001412.tgz"
-  integrity sha512-+TeEIee1gS5bYOiuf+PS/kp2mrXic37Hl66VY6EAfxasIk5fELTktK2oOezYed12H8w7jt3s512PpulQidPjwA==
-
-caniuse-lite@^1.0.30001400:
-  version "1.0.30001426"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001426.tgz#58da20446ccd0cb1dfebd11d2350c907ee7c2eaa"
-  integrity sha512-n7cosrHLl8AWt0wwZw/PJZgUg3lV0gk9LMI7ikGJwhyhgsd2Nb65vKvmSexCqq/J7rbH3mFG6yZZiPR5dLPW5A==
+caniuse-lite@^1.0.30001181, caniuse-lite@^1.0.30001202, caniuse-lite@^1.0.30001219, caniuse-lite@^1.0.30001228, caniuse-lite@^1.0.30001400:
+  version "1.0.30001472"
+  resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001472.tgz"
+  integrity sha512-xWC/0+hHHQgj3/vrKYY0AAzeIUgr7L9wlELIcAvZdDUHlhL/kNxMdnQLOSOQfP8R51ZzPhmHdyMkI0MMpmxCfg==
 
 canvas-fit@^1.5.0:
   version "1.5.0"
@@ -5771,6 +5771,11 @@ rc-virtual-list@^3.0.1, rc-virtual-list@^3.2.0:
     classnames "^2.2.6"
     rc-resize-observer "^1.0.0"
     rc-util "^5.0.7"
+
+react-animate-height@^3.1.1:
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/react-animate-height/-/react-animate-height-3.1.1.tgz#3e324c417a5d18afcdd78d2ad71108c14868a28b"
+  integrity sha512-UkC6+V3ZlCneBRaSM7aUctDJ+PRP6ztcGtxvU7MTeoMMWPhz8BQNaX7QWaZrkzp1ih1G8uZZ+DI9nfLvtD6OdQ==
 
 react-copy-to-clipboard@^5.0.3:
   version "5.0.3"

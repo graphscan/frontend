@@ -49,9 +49,11 @@ export type IndexerAllocation = {
       subgraph: {
         id: string;
         active: boolean;
-        image: string | null;
-        displayName: string | null;
         createdAt: number;
+        metadata: {
+          image: string | null;
+          displayName: string | null;
+        } | null;
         currentVersion: {
           id: string;
           subgraphDeployment: {
@@ -326,8 +328,12 @@ export const createTransformerToRow = (
   return {
     id,
     key: id,
-    image: earliestActualVersion?.subgraph.image ?? lastPastVersion.subgraph.image,
-    subgraphName: earliestActualVersion?.subgraph.displayName ?? lastPastVersion.subgraph.displayName,
+    image:
+      earliestActualVersion?.subgraph.metadata?.image ?? lastPastVersion.subgraph.metadata?.image ?? null,
+    subgraphName:
+      earliestActualVersion?.subgraph.metadata?.displayName ??
+      lastPastVersion.subgraph.metadata?.displayName ??
+      null,
     subgraphProportion:
       earliestActualVersion &&
       Number(earliestActualVersion.subgraph.currentVersion?.subgraphDeployment.stakedTokens)

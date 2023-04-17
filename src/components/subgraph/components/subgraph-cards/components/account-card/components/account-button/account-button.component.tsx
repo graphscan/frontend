@@ -8,9 +8,13 @@ type Props = {
 };
 
 export const AccountButton: React.FC<Props> = ({ id }) => {
+  const { thegraphExplorer, thegraphExplorerChain } = getEnvVariables();
+
   return (
     <a
-      href={`${getEnvVariables().thegraphExplorer}/explorer/subgraph?id=${id}`}
+      href={`${thegraphExplorer}/explorer/subgraph?id=${id}${
+        thegraphExplorerChain ? `&chain=${thegraphExplorerChain}` : ''
+      }`.trim()}
       target="_blank"
       rel="noreferrer"
       style={{ outline: 'none' }}

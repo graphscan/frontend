@@ -1,15 +1,15 @@
 import { useState, useRef, useCallback } from 'react';
 import { Row, Col } from 'antd';
 import { transformGraphNetworkToStats } from './network-stats.model';
-import { useNetworkStats } from './network-stats.service';
+import { Styles, Preloader } from './network-stats.styled';
+import { ProtocolContracts } from './protocol-contracts/protocol-contracts.component';
+import { Modal } from '../../../common/modal/modal.component';
+import { Spinner } from '../../../common/spinner/spinner.component';
+import { DISCARDED_CURATORS_COUNT } from '../../../../model/curators.model';
+import { useGraphNetwork } from '../../../../services/graph-network.service';
+import { preventDefault } from '../../../../utils/events.utils';
 import { formatNumber } from '../../../../utils/number.utils';
 import { useTooltip, tooltipNumberContent } from '../../../../utils/tooltip.utils';
-import { Styles, Preloader } from './network-stats.styled';
-import { Modal } from '../../../common/modal/modal.component';
-import { ProtocolContracts } from './protocol-contracts/protocol-contracts.component';
-import { Spinner } from '../../../common/spinner/spinner.component';
-import { preventDefault } from '../../../../utils/events.utils';
-import { DISCARDED_CURATORS_COUNT } from '../../../../model/curators.model';
 
 export const NetworkStats: React.FC = () => {
   useTooltip();
@@ -18,7 +18,7 @@ export const NetworkStats: React.FC = () => {
   const [height, setHeight] = useState<string>('0px');
   const [showModal, setShowModal] = useState(false);
 
-  const { data, error, isLoading } = useNetworkStats();
+  const { data, error, isLoading } = useGraphNetwork();
 
   const ref = useRef<HTMLDivElement>(null);
 

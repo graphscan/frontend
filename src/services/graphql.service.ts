@@ -22,9 +22,11 @@ export const fetchAllConsecutively = async <T>(
   fetcher: (skip: number) => Promise<Array<T>>,
   acc: Array<T> = [],
 ) => {
+  let response: Array<T>;
   do {
-    acc.push(...(await fetcher(acc.length)));
-  } while (acc.length > 0 && acc.length % REQUEST_LIMIT === 0);
+    response = await fetcher(acc.length);
+    acc.push(...response);
+  } while (response.length > 0 && response.length % REQUEST_LIMIT === 0);
 
   return acc;
 };

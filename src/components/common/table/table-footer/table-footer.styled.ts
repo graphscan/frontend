@@ -20,8 +20,9 @@ export const Wrapper = styled.footer`
   }
 `;
 
-export const Container = styled(FooterContainer)`
+export const Container = styled(FooterContainer)<{ isDocsOnly: boolean }>`
   justify-content: space-between;
+  flex-direction: ${(p) => (p.isDocsOnly ? 'row-reverse' : 'row')};
 `;
 
 export const LeftSide = styled.div`

@@ -66,7 +66,7 @@ export type IndexersRow = {
 const titles: Record<
   Exclude<
     keyof IndexersRow,
-    'key' | 'name' | 'indexingRewardCut' | 'queryFeeCut' | 'allocationRate' | 'favourite' | 'ryabina'
+    'key' | 'name' | 'indexingRewardCut' | 'queryFeeCut' | 'allocationRate' | 'favourite'
   >,
   string
 > = {

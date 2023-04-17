@@ -63,7 +63,7 @@ export type IndexersRowLite = {
 const titles: Record<
   Exclude<
     keyof IndexersRowLite,
-    'key' | 'name' | 'indexingRewardCut' | 'queryFeeCut' | 'allocationRate' | 'favourite' | 'ryabina'
+    'key' | 'name' | 'indexingRewardCut' | 'queryFeeCut' | 'allocationRate' | 'favourite'
   >,
   string
 > = {

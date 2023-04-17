@@ -1,0 +1,6 @@
+.next
+public
+src/libs
+next.config.js
+.eslintrc.js
+lint-staged.config.js

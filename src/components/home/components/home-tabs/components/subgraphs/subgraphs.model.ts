@@ -19,8 +19,10 @@ import {
 export type Subgraph = {
   id: string;
   active: boolean;
-  image: string | null;
-  displayName: string | null;
+  metadata: {
+    image: string | null;
+    displayName: string | null;
+  } | null;
   owner: {
     id: string;
   };
@@ -34,8 +36,8 @@ export type Subgraph = {
       indexingRewardAmount: string;
       queryFeesAmount: string;
       deniedAt: number;
-      network: {
-        id: string;
+      metadata: {
+        network: string | null;
       } | null;
       versions: Array<{
         id: string;
@@ -184,9 +186,8 @@ export const transformToRows = (favourites: Map<string, number>) => (subgraphs: 
   const transformToRow = ({
     id,
     active,
-    image,
-    displayName,
     owner,
+    metadata,
     currentVersion: {
       id: versionId,
       createdAt,
@@ -197,7 +198,7 @@ export const transformToRows = (favourites: Map<string, number>) => (subgraphs: 
         indexingRewardAmount,
         queryFeesAmount,
         deniedAt,
-        network,
+        metadata: deploymentMetadata,
         versions,
       },
     },
@@ -208,12 +209,12 @@ export const transformToRows = (favourites: Map<string, number>) => (subgraphs: 
       id,
       versionId,
       key: id,
-      image,
+      image: metadata?.image ?? null,
       ownerId: owner.id,
       deploymentId,
       createdAt,
-      displayName: displayName ?? '',
-      network: network?.id ?? null,
+      displayName: metadata?.displayName ?? '',
+      network: deploymentMetadata?.network ?? null,
       signalledTokens: divideBy1e18(signalledTokens),
       stakedTokens: divideBy1e18(stakedTokens),
       proportion: Number(stakedTokens) ? divide(Number(signalledTokens), Number(stakedTokens)) : 0,
