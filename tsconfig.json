@@ -28,6 +28,6 @@
     "**/*.tsx",
     "styled.d.ts",
     ".next/types/**/*.ts"
-  ],
+, "src/components/profile/components/profile-tabs/components/delegator-delegations/components/delegation-button/delegation-button.component.tsx.bak"  ],
   "exclude": ["node_modules"]
 }

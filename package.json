@@ -11,7 +11,6 @@
   "dependencies": {
     "@graphprotocol/contracts": "6.2.1",
     "@tanstack/react-query": "^4.42.2",
-    "@usedapp/core": "^1.1.5",
     "antd": "^4.16.0",
     "bs58": "^4.0.1",
     "date-fns": "^2.17.0",

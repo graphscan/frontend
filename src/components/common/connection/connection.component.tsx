@@ -1,6 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { observer } from "mobx-react-lite";
-import { useEthers } from "@usedapp/core";
 import Link from "next/link";
 import { useLockWallets } from "./connection.service";
 import {
@@ -24,38 +22,87 @@ import { AccountButtons } from "../account-buttons/account-buttons.component";
 import { Glow } from "../glow/glow.component";
 import { RobohashImage } from "../robohash-image/robohash-image.component";
 import { Spinner } from "../spinner/spinner.component";
-import { connectionViewModel } from "../../../model/connection.model";
-import { preventDefault } from "../../../utils/events.utils";
 import { clampMiddle } from "../../../utils/text.utils";
 
 type Props = {
   showGlow?: boolean;
 };
 
-export const Connection: React.FC<Props> = observer(({ showGlow = true }) => {
-  const { currentAddress, setCurrentAddress } = connectionViewModel;
+const CONNECTED_ACCOUNT_KEY = "connected-account-v1";
+
+function saveAccount(addr: string | null) {
+  if (addr) {
+    localStorage.setItem(CONNECTED_ACCOUNT_KEY, addr);
+  } else {
+    localStorage.removeItem(CONNECTED_ACCOUNT_KEY);
+  }
+}
+
+function getSavedAccount() {
+  return localStorage.getItem(CONNECTED_ACCOUNT_KEY);
+}
+// TODO: if we want real interactions with wallet we need to rewrite everything to support modern providers and probably switch to viem.
+// and refactor evertything to more complex
+export function Connection({ showGlow = true }: Props) {
+  const [currentAddress, setCurrentAddress] = useState<string | null>(null);
 
   const [showMenu, setShowMenu] = useState(false);
   const toggleMenu = useCallback(
     () => setShowMenu((prevState) => !prevState),
-    [],
+    []
   );
 
-  const { activateBrowserWallet, deactivate, account, active } = useEthers();
-
-  const id = account?.toLowerCase();
+  const active = currentAddress !== null;
+  const id = currentAddress?.toLowerCase();
 
   const { data, isFetching } = useLockWallets(id);
 
-  const connect = useCallback(
-    () => activateBrowserWallet(),
-    [activateBrowserWallet],
-  );
+  // Restore connection on mount only if we have a saved account
+  useEffect(() => {
+    if (!window.ethereum) return;
 
-  const disconnect = useCallback(() => {
-    setCurrentAddress(null);
-    deactivate();
-  }, [deactivate, setCurrentAddress]);
+    const saved = getSavedAccount();
+    if (!saved) return;
+
+    window.ethereum
+      .request({ method: "eth_accounts" })
+      .then((accounts: string[]) => {
+        if (
+          accounts.some((a: string) => a.toLowerCase() === saved.toLowerCase())
+        ) {
+          setCurrentAddress(saved);
+        }
+      });
+
+    const handleAccountsChanged = (accounts: string[]) => {
+      if (accounts.length > 0) {
+        setCurrentAddress(accounts[0]);
+      } else {
+        setCurrentAddress(null);
+      }
+    };
+
+    window.ethereum.on("accountsChanged", handleAccountsChanged);
+
+    return () => {
+      window.ethereum?.removeListener("accountsChanged", handleAccountsChanged);
+    };
+  }, []);
+
+  const connect = useCallback(async () => {
+    if (!window.ethereum) return;
+
+    const accounts: string[] = await window.ethereum.request({
+      method: "eth_requestAccounts",
+    });
+    if (accounts.length > 0) {
+      setCurrentAddress(accounts[0]);
+    }
+  }, []);
+
+  useEffect(() => {
+    saveAccount(currentAddress);
+  }, [currentAddress]);
 
   const ref = useRef<HTMLDivElement>(null);
 
@@ -79,14 +126,14 @@ export const Connection: React.FC<Props> = observer(({ showGlow = true }) => {
     <Container ref={ref}>
       {Boolean(showGlow) && <Glow src="/images/glow-connection.png" />}
       {typeof id === "string" && active ? (
-        <Connected onMouseDown={preventDefault} onClick={toggleMenu}>
+        <Connected onClick={toggleMenu}>
           <Userpick>
             <RobohashImage size={36} accountId={currentAddress ?? id} />
           </Userpick>
           {clampMiddle(currentAddress ?? id)}
         </Connected>
       ) : (
-        <Button onClick={connect} onMouseDown={preventDefault}>
+        <Button onClick={connect}>
           <Icon>
             <img src="/images/logo-metamask.svg" alt="Metamask logo" />
           </Icon>
@@ -115,11 +162,8 @@ export const Connection: React.FC<Props> = observer(({ showGlow = true }) => {
                       pathname: "/profile",
                       query: { id: currentAddress ?? id },
                     }}
-                    legacyBehavior
                   >
-                    <a onMouseDown={preventDefault}>
-                      {clampMiddle(currentAddress ?? id)}
-                    </a>
+                    {clampMiddle(currentAddress ?? id)}
                   </Link>
                 </Heading>
                 <AccountButtons id={currentAddress ?? id} />
@@ -142,7 +186,7 @@ export const Connection: React.FC<Props> = observer(({ showGlow = true }) => {
               </MenuBody>
             ) : null}
             <MenuFooter>
-              <Disconnect onMouseDown={preventDefault} onClick={disconnect}>
+              <Disconnect onClick={() => setCurrentAddress(null)}>
                 Disconnect
               </Disconnect>
             </MenuFooter>
@@ -151,4 +195,4 @@ export const Connection: React.FC<Props> = observer(({ showGlow = true }) => {
       )}
     </Container>
   );
-});
+}
