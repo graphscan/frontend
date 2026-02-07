@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import { observer } from "mobx-react-lite";
+import { connectionViewModel } from "../../../model/connection.model";
 import { useLockWallets } from "./connection.service";
 import {
   Container,
@@ -45,8 +47,8 @@ function getSavedAccount() {
 }
 // TODO: if we want real interactions with wallet we need to rewrite everything to support modern providers and probably switch to viem.
 // and refactor evertything to more complex
-export function Connection({ showGlow = true }: Props) {
-  const [currentAddress, setCurrentAddress] = useState<string | null>(null);
+export const Connection: React.FC<Props> = observer(({ showGlow = true }) => {
+  const { currentAddress, setCurrentAddress } = connectionViewModel;
 
   const [showMenu, setShowMenu] = useState(false);
   const toggleMenu = useCallback(
@@ -69,7 +71,9 @@ export function Connection({ showGlow = true }: Props) {
         .request({ method: "eth_accounts" })
         .then((accounts: string[]) => {
           if (
-            accounts.some((a: string) => a.toLowerCase() === saved.toLowerCase())
+            accounts.some(
+              (a: string) => a.toLowerCase() === saved.toLowerCase()
+            )
           ) {
             setCurrentAddress(saved);
           } else {
@@ -199,4 +203,4 @@ export function Connection({ showGlow = true }: Props) {
       )}
     </Container>
   );
-}
+});

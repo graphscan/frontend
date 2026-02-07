@@ -43,7 +43,7 @@ const getBaseDelegationId = (id: string): string => {
  * Merges related delegatedStake entities that were split due to protocol upgrade.
  */
 export const mergeSplitDelegations = (
-  delegations: Array<DelegatorDelegation>,
+  delegations: Array<DelegatorDelegation>
 ): Array<DelegatorDelegation> => {
   const groupedByBase = new Map<string, Array<DelegatorDelegation>>();
 
@@ -141,15 +141,13 @@ export const columnsWidth = {
   "1280": [130, 100, 100, 100, 100, 100, 100, 100, 155, 155, 120, 120, 120],
 };
 
-export const createDelegatorDelegationsColumns = (
-  createTransactionButtonRenderer: (
-    transaction: DelegationTransaction,
-  ) => (_: undefined, row: DelegatorDelegationsRow) => React.ReactElement,
-): Array<ColumnType<DelegatorDelegationsRow>> => [
+export const createDelegatorDelegationsColumns = (): Array<
+  ColumnType<DelegatorDelegationsRow>
+> => [
   {
     title: createTitleWithTooltipDescription(
       titles.id,
-      "The indexer’s Ethereum address or ENS.",
+      "The indexer’s Ethereum address or ENS."
     ),
     dataIndex: "id",
     key: "id",
@@ -158,7 +156,7 @@ export const createDelegatorDelegationsColumns = (
   {
     title: createTitleWithTooltipDescription(
       titles.currentDelegationAmount,
-      "Size of delegation to indexer.",
+      "Size of delegation to indexer."
     ),
     dataIndex: "currentDelegationAmount",
     key: "currentDelegationAmount",
@@ -167,7 +165,7 @@ export const createDelegatorDelegationsColumns = (
   {
     title: createTitleWithTooltipDescription(
       titles.shareAmount,
-      "Delegations share of chosen Indexer’s pool.",
+      "Delegations share of chosen Indexer’s pool."
     ),
     dataIndex: "shareAmount",
     key: "shareAmount",
@@ -176,7 +174,7 @@ export const createDelegatorDelegationsColumns = (
   {
     title: createTitleWithTooltipDescription(
       titles.stakedTokens,
-      "All-time delegations to the chosen Indexer.",
+      "All-time delegations to the chosen Indexer."
     ),
     dataIndex: "stakedTokens",
     key: "stakedTokens",
@@ -185,7 +183,7 @@ export const createDelegatorDelegationsColumns = (
   {
     title: createTitleWithTooltipDescription(
       titles.unstakedTokens,
-      "All-time undelegations from the chosen indexer.",
+      "All-time undelegations from the chosen indexer."
     ),
     dataIndex: "unstakedTokens",
     key: "unstakedTokens",
@@ -194,7 +192,7 @@ export const createDelegatorDelegationsColumns = (
   {
     title: createTitleWithTooltipDescription(
       titles.realizedRewards,
-      "The amount of <strong>already undelegated</strong> rewards from the chosen indexer.",
+      "The amount of <strong>already undelegated</strong> rewards from the chosen indexer."
     ),
     dataIndex: "realizedRewards",
     key: "realizedRewards",
@@ -203,7 +201,7 @@ export const createDelegatorDelegationsColumns = (
   {
     title: createTitleWithTooltipDescription(
       titles.unreleasedReward,
-      "The amount of <strong>accumulated and not yet undelegated</strong> rewards from the chosen indexer.",
+      "The amount of <strong>accumulated and not yet undelegated</strong> rewards from the chosen indexer."
     ),
     dataIndex: "unreleasedReward",
     key: "unreleasedReward",
@@ -212,7 +210,7 @@ export const createDelegatorDelegationsColumns = (
   {
     title: createTitleWithTooltipDescription(
       titles.unreleasedRewardsPercent,
-      "Ratio of Rewards to Stake.",
+      "Ratio of Rewards to Stake."
     ),
     dataIndex: "unreleasedRewardsPercent",
     key: "unreleasedRewardsPercent",
@@ -232,27 +230,27 @@ export const createDelegatorDelegationsColumns = (
     align: "center",
     render: renderDate,
   },
-  {
-    title: createTitleWithTooltipDescription("Delegate"),
-    dataIndex: "delegate",
-    key: "delegate",
-    align: "center",
-    render: createTransactionButtonRenderer("delegate"),
-  },
-  {
-    title: createTitleWithTooltipDescription("Undelegate"),
-    dataIndex: "undelegate",
-    key: "undelegate",
-    align: "center",
-    render: createTransactionButtonRenderer("undelegate"),
-  },
-  {
-    title: createTitleWithTooltipDescription("Withdraw"),
-    dataIndex: "withdraw",
-    key: "withdraw",
-    align: "center",
-    render: createTransactionButtonRenderer("withdraw"),
-  },
+  // {
+  //   title: createTitleWithTooltipDescription("Delegate"),
+  //   dataIndex: "delegate",
+  //   key: "delegate",
+  //   align: "center",
+  //   render: createTransactionButtonRenderer("delegate"),
+  // },
+  // {
+  //   title: createTitleWithTooltipDescription("Undelegate"),
+  //   dataIndex: "undelegate",
+  //   key: "undelegate",
+  //   align: "center",
+  //   render: createTransactionButtonRenderer("undelegate"),
+  // },
+  // {
+  //   title: createTitleWithTooltipDescription("Withdraw"),
+  //   dataIndex: "withdraw",
+  //   key: "withdraw",
+  //   align: "center",
+  //   render: createTransactionButtonRenderer("withdraw"),
+  // },
 ];
 
 export const transformToRow = ({
@@ -269,13 +267,13 @@ export const transformToRow = ({
   const { id, delegatorShares, delegationExchangeRate, defaultDisplayName } =
     indexer;
   const currentDelegationAmount = divideBy1e18(
-    calcStakeCurrentDelegation({ shareAmount, indexer }),
+    calcStakeCurrentDelegation({ shareAmount, indexer })
   );
 
   // Unrealized Rewards = (delegationExchangeRate - personalExchangeRate) * shareAmount
   const unrealizedRewards = divideBy1e18(
     (Number(delegationExchangeRate) - Number(personalExchangeRate)) *
-      Number(shareAmount),
+      Number(shareAmount)
   );
 
   const stakedTokensValue = divideBy1e18(stakedTokens);
