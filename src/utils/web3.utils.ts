@@ -1,26 +1,10 @@
 import { useEffect, useState } from "react";
-import { ethers, BigNumber } from "ethers";
+import { ethers, formatUnits } from "ethers";
 import addresses from "@graphprotocol/contracts/addresses.json";
 import grtTokenAbi from "@graphprotocol/contracts/dist/abis/GraphToken.json";
-import { divideBy1e18 } from "./number.utils";
 import { isKey } from "./object.utils";
 
 import { web3Client } from "../services/web3.service";
-
-export const getGasLimit = async (
-  contract: ethers.Contract,
-  functionName: string,
-  ...args: Array<unknown>
-) => {
-  try {
-    const estimated = await contract.estimateGas[functionName](...args);
-    return estimated.mul(11).div(10);
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error("Failed to estimate gas limit", e);
-    return BigNumber.from(3000000);
-  }
-};
 
 export const getSupportedChainId = () => {
   const chainId = "42161" as const;
@@ -33,10 +17,10 @@ export const getSupportedChainId = () => {
 };
 
 export const useGRTBalance = (account: string | null | undefined) => {
-  const [balance, setBalance] = useState(BigNumber.from(0));
+  const [balance, setBalance] = useState(0n);
 
   useEffect(() => {
-    setBalance(BigNumber.from(0));
+    setBalance(0n);
 
     const chainId = getSupportedChainId();
 
@@ -51,7 +35,7 @@ export const useGRTBalance = (account: string | null | undefined) => {
     const token = new ethers.Contract(
       tokenAddress,
       grtTokenAbi,
-      web3Client.getSigner(account),
+      web3Client
     );
 
     const updateBalance = async () => {
@@ -75,13 +59,5 @@ export const useGRTBalance = (account: string | null | undefined) => {
   return balance;
 };
 
-export const switchNetwork = async () =>
-  window?.ethereum?.request({
-    method: "wallet_switchEthereumChain",
-    params: [{ chainId: ethers.utils.hexValue(Number(getSupportedChainId())) }],
-  });
-
-export const stringToBigNumber = (value: string) =>
-  ethers.utils.parseUnits(value, 18);
-
-export const bigNumberToGRT = (value: BigNumber) => divideBy1e18(String(value));
+export const bigNumberToGRT = (value: bigint): number =>
+  Number(formatUnits(value, 18));

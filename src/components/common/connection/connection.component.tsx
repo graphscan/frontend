@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useLockWallets } from "./connection.service";
@@ -62,17 +64,19 @@ export function Connection({ showGlow = true }: Props) {
     if (!window.ethereum) return;
 
     const saved = getSavedAccount();
-    if (!saved) return;
-
-    window.ethereum
-      .request({ method: "eth_accounts" })
-      .then((accounts: string[]) => {
-        if (
-          accounts.some((a: string) => a.toLowerCase() === saved.toLowerCase())
-        ) {
-          setCurrentAddress(saved);
-        }
-      });
+    if (saved) {
+      window.ethereum
+        .request({ method: "eth_accounts" })
+        .then((accounts: string[]) => {
+          if (
+            accounts.some((a: string) => a.toLowerCase() === saved.toLowerCase())
+          ) {
+            setCurrentAddress(saved);
+          } else {
+            setCurrentAddress(null);
+          }
+        });
+    }
 
     const handleAccountsChanged = (accounts: string[]) => {
       if (accounts.length > 0) {
