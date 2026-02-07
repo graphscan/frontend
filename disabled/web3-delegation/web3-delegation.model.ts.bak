@@ -1,0 +1,266 @@
+import { makeAutoObservable } from 'mobx';
+import { ethers } from 'ethers';
+import addresses from '@graphprotocol/contracts/addresses.json';
+import stakingAbi from '@graphprotocol/contracts/dist/abis/StakingExtension.json';
+import grtTokenAbi from '@graphprotocol/contracts/dist/abis/GraphToken.json';
+import tokenLockWalletAbi from '../../../../services/abi/tokenLockWalletAbi.json';
+import { connectionViewModel } from '../../../../model/connection.model';
+import { DelegationTransactionWithUI, Status } from '../../../../model/web3-transactions.model';
+import {
+  getSupportedChainId,
+  switchNetwork,
+  stringToBigNumber,
+  getGasLimit,
+} from '../../../../utils/web3.utils';
+
+export type SectionProps = {
+  amount: string;
+  delegated: number;
+  status: Status;
+  transaction: DelegationTransactionWithUI;
+  onSubmit: (() => Promise<void>) | (() => void);
+  setAmount: (amount: string) => void;
+};
+
+export class Web3DelegationViewModel {
+  amount = '';
+  status: Status = null;
+
+  constructor() {
+    makeAutoObservable(this, {}, { autoBind: true });
+  }
+
+  get currentAddress() {
+    return connectionViewModel.currentAddress;
+  }
+
+  async delegate(indexerId: string) {
+    if (!window.ethereum) {
+      throw new Error('Metamask must be connected');
+    }
+
+    this.setStatus('loading');
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const account = await signer.getAddress();
+      const currentChainId = await signer.getChainId();
+      const chainId = getSupportedChainId();
+
+      if (String(currentChainId) !== chainId) {
+        this.setStatus(null);
+        return switchNetwork();
+      }
+
+      const chainAddresses = addresses[chainId];
+
+      const stakingAddress = chainAddresses.L2Staking.address;
+
+      const staking = new ethers.Contract(stakingAddress, stakingAbi, signer);
+
+      const tokenAddress = chainAddresses.L2GraphToken.address;
+
+      const token = new ethers.Contract(tokenAddress, grtTokenAbi, signer);
+
+      const amountBn = stringToBigNumber(this.amount);
+      const allowance = await token.allowance(account, stakingAddress);
+
+      if (allowance.lt(amountBn)) {
+        const functionName = 'approve';
+        const gasLimit = await getGasLimit(token, functionName, stakingAddress, ethers.constants.MaxUint256);
+
+        await token[functionName](stakingAddress, amountBn, {
+          gasLimit,
+        });
+      }
+
+      const functionName = 'delegate';
+      const args = [indexerId, amountBn];
+      const gasLimit = await getGasLimit(staking, functionName, ...args);
+
+      const txResponse = await staking[functionName](...args, {
+        gasLimit,
+      });
+      const txReceipt = await txResponse.wait();
+      txReceipt.status !== 0 ? this.setStatus('done') : this.onTransactionFail();
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error(error);
+      this.onTransactionFail();
+    }
+  }
+
+  async delegateLocked(indexerId: string) {
+    if (!window.ethereum) {
+      throw new Error('Metamask must be connected');
+    }
+
+    if (typeof this.currentAddress !== 'string') {
+      throw new Error('Set token lock wallet address');
+    }
+
+    this.setStatus('loading');
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const currentChainId = await signer.getChainId();
+      const chainId = getSupportedChainId();
+
+      if (String(currentChainId) !== chainId) {
+        this.setStatus(null);
+        return switchNetwork();
+      }
+
+      const lockWallet = new ethers.Contract(this.currentAddress, tokenLockWalletAbi, signer);
+
+      const chainAddresses = addresses[chainId];
+
+      const tokenAddress = ('L2GraphToken' in chainAddresses
+        ? chainAddresses.L2GraphToken
+        : chainAddresses.GraphToken
+      ).address;
+
+      const token = new ethers.Contract(tokenAddress, grtTokenAbi, signer);
+
+      const stakingAddress = ('L2Staking' in chainAddresses
+        ? chainAddresses.L2Staking
+        : chainAddresses.L1Staking
+      ).address;
+
+      const amountBn = stringToBigNumber(this.amount);
+      const allowance = await token.allowance(this.currentAddress, stakingAddress);
+
+      if (allowance.lt(amountBn)) {
+        const functionName = 'approveProtocol';
+        const gasLimit = await getGasLimit(lockWallet, functionName);
+
+        await lockWallet[functionName]({
+          gasLimit,
+        });
+      }
+
+      const functionName = 'delegate';
+      const args = [indexerId, amountBn];
+      const gasLimit = await getGasLimit(lockWallet, functionName, ...args);
+
+      const txResponse = await lockWallet[functionName](...args, {
+        gasLimit,
+      });
+      const txReceipt = await txResponse.wait();
+      txReceipt.status !== 0 ? this.setStatus('done') : this.onTransactionFail();
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error(e);
+      this.onTransactionFail();
+    }
+  }
+
+  setAmount(amount: string) {
+    this.amount = amount;
+  }
+
+  setStatus(status: Status) {
+    this.status = status;
+  }
+
+  async undelegate(indexerId: string, delegatedToIndexer: number) {
+    if (!window.ethereum) {
+      throw new Error('Metamask must be connected');
+    }
+
+    this.setStatus('loading');
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const account = await signer.getAddress();
+      const currentChainId = await signer.getChainId();
+      const chainId = getSupportedChainId();
+
+      if (String(currentChainId) !== chainId) {
+        this.setStatus(null);
+        return switchNetwork();
+      }
+
+      const chainAddresses = addresses[chainId];
+      const stakingAddress = ('L2Staking' in chainAddresses
+        ? chainAddresses.L2Staking
+        : chainAddresses.L1Staking
+      ).address;
+
+      const contract = new ethers.Contract(stakingAddress, stakingAbi, signer);
+      const delegation = await contract.getDelegation(indexerId, account);
+      const amountBn = stringToBigNumber(this.amount)
+        .mul(delegation.shares)
+        .div(stringToBigNumber(String(delegatedToIndexer)));
+
+      const functionName = 'undelegate';
+      const args = [indexerId, amountBn];
+      const gasLimit = await getGasLimit(contract, functionName, ...args);
+
+      const txResponse = await contract[functionName](...args, {
+        gasLimit,
+      });
+      const txReceipt = await txResponse.wait();
+      txReceipt.status !== 0 ? this.setStatus('done') : this.onTransactionFail();
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error(e);
+      this.onTransactionFail();
+    }
+  }
+
+  async undelegateLocked(indexerId: string, delegatedToIndexer: number) {
+    if (!window.ethereum) {
+      throw new Error('Metamask must be connected');
+    }
+
+    if (typeof this.currentAddress !== 'string') {
+      throw new Error('Set token lock wallet address');
+    }
+
+    this.setStatus('loading');
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const currentChainId = await signer.getChainId();
+      const chainId = getSupportedChainId();
+
+      if (String(currentChainId) !== chainId) {
+        this.setStatus(null);
+        return switchNetwork();
+      }
+
+      const lockWallet = new ethers.Contract(this.currentAddress, tokenLockWalletAbi, signer);
+      const chainAddresses = addresses[chainId];
+      const stakingAddress = ('L2Staking' in chainAddresses
+        ? chainAddresses.L2Staking
+        : chainAddresses.L1Staking
+      ).address;
+      const staking = new ethers.Contract(stakingAddress, stakingAbi, signer);
+
+      const delegation = await staking.getDelegation(indexerId, this.currentAddress);
+      const amountBn = stringToBigNumber(this.amount)
+        .mul(delegation.shares)
+        .div(stringToBigNumber(String(delegatedToIndexer)));
+
+      const functionName = 'undelegate';
+      const args = [indexerId, amountBn];
+      const gasLimit = await getGasLimit(lockWallet, functionName, ...args);
+
+      const txResponse = await lockWallet[functionName](...args, {
+        gasLimit,
+      });
+      const txReceipt = await txResponse.wait();
+      txReceipt.status !== 0 ? this.setStatus('done') : this.onTransactionFail();
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error(e);
+      this.onTransactionFail();
+    }
+  }
+
+  private onTransactionFail() {
+    this.setStatus(null);
+    this.setAmount('');
+  }
+}

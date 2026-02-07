@@ -1,0 +1,41 @@
+import { useQuery } from '@tanstack/react-query';
+import { gql } from 'graphql-request';
+import { Indexer, transform } from './indexer.model';
+import { INDEXER_DELEGATION_DATA_CACHE_KEY } from '../../web3-delegation.service';
+import { request, REQUEST_LIMIT } from '../../../../../../services/graphql.service';
+
+export type IndexerResponse = {
+  indexer: Indexer;
+};
+
+export const useIndexerDelegation = (id: string) => {
+  return useQuery([INDEXER_DELEGATION_DATA_CACHE_KEY, id.toLowerCase()], async () => {
+    const { indexer } = await request<IndexerResponse>(gql`
+      query {
+        indexer(id: ${JSON.stringify(id.toLowerCase())}) {
+          id
+          indexingRewardEffectiveCut
+          queryFeeEffectiveCut
+          delegatedTokens
+          stakedTokens
+          lockedTokens
+          allocatedTokens
+          allocations(first: ${REQUEST_LIMIT}) {
+            id
+            allocatedTokens
+            subgraphDeployment {
+              id
+              signalledTokens
+              stakedTokens
+              deniedAt
+            }
+          }
+        }
+      }
+    `);
+
+    return transform(indexer);
+  });
+};
+
+export type IndexerDelegationResponse = ReturnType<typeof useIndexerDelegation>;

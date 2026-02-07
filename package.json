@@ -1,0 +1,60 @@
+{
+  "name": "graphscan",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "npx serve out",
+    "prettier": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\""
+  },
+  "type": "module",
+  "dependencies": {
+    "@graphprotocol/contracts": "6.2.1",
+    "@tanstack/react-query": "^4.42.2",
+    "@usedapp/core": "^1.1.5",
+    "antd": "^4.16.0",
+    "bs58": "^4.0.1",
+    "date-fns": "^2.17.0",
+    "ethers": "^5.8.0",
+    "graphql-request": "^5.0.0",
+    "mobx": "^6.15.0",
+    "mobx-react-lite": "^3.4.3",
+    "next": "^16.1.5",
+    "numbro": "^2.5.0",
+    "papaparse": "^5.5.3",
+    "plotly.js": "^2.15.1",
+    "ramda": "^0.27.1",
+    "rc-resize-observer": "^1.4.3",
+    "react": "^19.2.4",
+    "react-animate-height": "^3.1.1",
+    "react-dom": "^19.2.4",
+    "react-map-gl": "^7.0.19",
+    "react-plotly.js": "^2.6.0",
+    "react-responsive": "^9.0.0-beta.5",
+    "react-select": "^5.10.2",
+    "react-switch": "^6.0.0",
+    "react-tooltip": "^4.2.15",
+    "styled-components": "^6.3.8"
+  },
+  "devDependencies": {
+    "@types/bs58": "^4.0.1",
+    "@types/date-fns": "^2.6.0",
+    "@types/gtag.js": "^0.0.12",
+    "@types/node": "^25.0.0",
+    "@types/numbro": "^1.9.3",
+    "@types/papaparse": "^5.2.5",
+    "@types/ramda": "^0.27.38",
+    "@types/react": "^19.2.10",
+    "@types/react-dom": "^19.2.3",
+    "@types/react-plotly.js": "^2.5.2",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "resolutions": {
+    "@types/react": "^19.2.10",
+    "@types/react-dom": "^19.2.3"
+  }
+}

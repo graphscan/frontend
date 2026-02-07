@@ -1,0 +1,5 @@
+- cleanup l1/l2 diffs
+- disable w3a
+- disable metamask staff
+- update all packages to latest
+- build to static

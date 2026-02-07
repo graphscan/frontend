@@ -1,0 +1,28 @@
+import { divideBy1e18 } from '../../../../../../utils/number.utils';
+
+export type Indexer = {
+  id: string;
+  indexingRewardEffectiveCut: string;
+  queryFeeEffectiveCut: string;
+  stakedTokens: string;
+  lockedTokens: string;
+  delegatedTokens: string;
+};
+
+export const transform = ({
+  indexingRewardEffectiveCut,
+  queryFeeEffectiveCut,
+  delegatedTokens,
+  stakedTokens,
+  lockedTokens,
+}: Indexer) => {
+  const delegationPool = divideBy1e18(delegatedTokens);
+  const delegationRemaining = (divideBy1e18(stakedTokens) - divideBy1e18(lockedTokens)) * 16 - delegationPool;
+
+  return {
+    effectiveIndexingRewardFeeCut: Number(indexingRewardEffectiveCut),
+    effectiveQueryFeeCut: Number(queryFeeEffectiveCut),
+    delegationPool,
+    maxCapacity: delegationRemaining,
+  };
+};

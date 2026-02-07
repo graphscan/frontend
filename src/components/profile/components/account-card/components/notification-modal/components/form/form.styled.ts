@@ -1,0 +1,93 @@
+import styled from "styled-components";
+import { formWidth } from "../../notification-modal.styled";
+import { Select as _Select } from "../../../../../../../common/select/select.component";
+
+export const StyledForm = styled.article`
+  width: ${formWidth};
+  display: flex;
+  flex-direction: column;
+
+  .form-controls {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .form-select-box {
+    padding-bottom: 24px;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.05;
+
+    label {
+      margin-bottom: 6px;
+      display: inline-flex;
+      color: #c6d7ef;
+      cursor: default;
+    }
+  }
+
+  .form-triggers {
+    margin: 16px 0 0;
+    padding: 24px 24px 0;
+    display: flex;
+    flex-direction: column;
+    background-color: #1f2d40;
+    border-radius: 6px;
+  }
+
+  .form-triggers-title {
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 120%;
+    color: #fff;
+  }
+
+  .form-fieldset {
+    margin: 0;
+    padding: 17.5px 0 12px;
+    display: flex;
+    justify-content: space-between;
+    border: none;
+    border-bottom: 1px solid #243855;
+
+    :last-child {
+      margin-bottom: 0;
+      border-bottom: none;
+    }
+
+    > div {
+      width: calc(50% - 6px);
+    }
+  }
+`;
+
+export const RedText = styled.span`
+  color: #ef3859;
+`;
+
+export const Select = styled(_Select)`
+  .react-select {
+    &__control {
+      height: 40px;
+    }
+
+    &__placeholder {
+      font-size: 16px;
+    }
+
+    &__single-value {
+      font-size: 16px;
+      line-height: 1.2;
+      color: #fff;
+    }
+
+    &__option {
+      padding-top: 10px;
+      padding-bottom: 10px;
+      font-size: 16px;
+      color: #fff;
+    }
+  }
+`;
