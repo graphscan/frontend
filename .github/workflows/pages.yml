@@ -11,7 +11,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: 'pages'
+  group: "pages"
   cancel-in-progress: true
 
 jobs:
@@ -24,13 +24,24 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
-          cache: 'yarn'
+          node-version: "24"
+          cache: "yarn"
 
       - name: Install dependencies
         run: yarn install
 
       - name: Build
+        env:
+          IS_TECHNICAL_WORKS: "false"
+          SUBGRAPH_ANALYTICS_URL: https://gateway.thegraph.com/api/subgraphs/id/AgV4u2z1BFZKSj4Go1AdQswUGW2FcAtnPhifd4V7NLVz
+          SUBGRAPH_MAIN_URL: https://gateway.thegraph.com/api/subgraphs/id/DZz4kDTdmzWLWsV373w2bSmoar3umKKH9y82SUKr5qmp
+          WEB3_RPC: https://arbitrum-one-rpc.publicnode.com
+          ETHEREUM_EXPLORER: https://etherscan.io
+          THEGRAPH_EXPLORER: https://thegraph.com
+          ACCEPTABLE_DELAY: "10"
+          PARTNERS: Ryabina::0x01234567890123456789012345678901234567890123,cp0x::0x01234567890123456789012345678901234567890123
+          ENS_URL: https://gateway.thegraph.com/api/subgraphs/id/5XqPmWe6gjyrJtFn9cLy237i4cWw2j9HcUJEXsP5qGtH
+          GRAPH_API_KEY: ${{ secrets.GRAPH_API_KEY }}
         run: yarn build
 
       - name: Upload pages artifact

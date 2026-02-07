@@ -78,9 +78,7 @@ export const useGRTBalance = (account: string | null | undefined) => {
 export const switchNetwork = async () =>
   window?.ethereum?.request({
     method: "wallet_switchEthereumChain",
-    params: [
-      { chainId: ethers.utils.hexValue(Number(getSupportedChainId())) },
-    ],
+    params: [{ chainId: ethers.utils.hexValue(Number(getSupportedChainId())) }],
   });
 
 export const stringToBigNumber = (value: string) =>

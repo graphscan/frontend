@@ -4,7 +4,7 @@
  * @type {import('next').NextConfig}
  */
 const nextConfig = {
-  output: 'export',
+  output: "export",
   compiler: {
     styledComponents: true,
   },
@@ -16,7 +16,6 @@ const nextConfig = {
     WEB3_RPC: process.env.WEB3_RPC,
     ETHEREUM_EXPLORER: process.env.ETHEREUM_EXPLORER,
     THEGRAPH_EXPLORER: process.env.THEGRAPH_EXPLORER,
-    CHAINS: process.env.CHAINS,
     ACCEPTABLE_DELAY: process.env.ACCEPTABLE_DELAY,
     PARTNERS: process.env.PARTNERS,
     WEB3ALERT_URL: process.env.WEB3ALERT_URL,
