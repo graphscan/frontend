@@ -10,7 +10,6 @@ import L2GraphTokenLockWallet from "../model/L2GraphTokenLockWallet.json";
 import { request, REQUEST_LIMIT } from "../../../../services/graphql.service";
 import { getEnsName } from "../../../../services/ens.service";
 import { web3Client } from "../../../../services/web3.service";
-import { getEnvVariables } from "../../../../utils/env.utils";
 
 type AccountResponse = {
   graphAccount: GraphAccount | null;

@@ -1,10 +1,8 @@
 import { Fragment } from "react";
 import Link from "next/link";
-// import { useEthers } from "@usedapp/core";
-// import { useRouter } from "next/router";
 import { Arbitrum, Eth } from "./account-card.icons";
 import { IconBox } from "./account-card.styled";
-// import { Web3Delegation } from "../web3-delegation.disabled/web3-delegation.component";
+
 import {
   Container,
   Left,
@@ -21,11 +19,8 @@ import {
   DescriptionRow,
 } from "../../../common/cards/left-card/left-card.styled";
 import { AccountButtons } from "../../../common/account-buttons/account-buttons.component";
-// import { Modal } from "../../../common/modal/modal.component";
-// import { DelegationTransactionWithUI } from "../../../../model/web3-transactions.model";
-import { TransactionButton } from "../../../common/transaction-button/transaction-button.component";
 import { RobohashImage } from "../../../common/robohash-image/robohash-image.component";
-import { clampMiddle, capitalize } from "../../../../utils/text.utils";
+import { clampMiddle } from "../../../../utils/text.utils";
 
 type Props = {
   id: string;

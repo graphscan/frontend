@@ -1,12 +1,7 @@
 import { makeAutoObservable } from "mobx";
 
-const CURRENT_ADDRESS_STORAGE_KEY = "current-address";
-
 class ConnectionViewModel {
-  currentAddress =
-    typeof localStorage !== "undefined"
-      ? localStorage.getItem(CURRENT_ADDRESS_STORAGE_KEY)
-      : null;
+  currentAddress: string | null = null;
 
   constructor() {
     makeAutoObservable(this, {}, { autoBind: true });
@@ -14,12 +9,6 @@ class ConnectionViewModel {
 
   setCurrentAddress(currentAddress: string | null) {
     this.currentAddress = currentAddress;
-
-    if (typeof currentAddress === "string") {
-      localStorage.setItem(CURRENT_ADDRESS_STORAGE_KEY, currentAddress);
-    } else {
-      localStorage.removeItem(CURRENT_ADDRESS_STORAGE_KEY);
-    }
   }
 }
 

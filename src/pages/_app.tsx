@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { DAppProvider } from "@usedapp/core";
 import { configure } from "mobx";
 import Head from "next/head";
 import type { AppProps } from "next/app";
@@ -82,11 +81,9 @@ const App = ({ Component, pageProps }: AppProps) => {
         <meta name="theme-color" content="#ffffff" />
       </Head>
       <QueryClientProvider client={queryClient}>
-        <DAppProvider config={{}}>
-          <Layout title="Graphscan">
-            <Component {...pageProps} />
-          </Layout>
-        </DAppProvider>
+        <Layout title="Graphscan">
+          <Component {...pageProps} />
+        </Layout>
       </QueryClientProvider>
       <Fonts />
       <GlobalStyles />

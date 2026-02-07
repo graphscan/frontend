@@ -141,11 +141,9 @@ export const columnsWidth = {
   "1280": [130, 100, 100, 100, 100, 100, 100, 100, 155, 155, 120, 120, 120],
 };
 
-export const createDelegatorDelegationsColumns = (
-  createTransactionButtonRenderer: (
-    transaction: DelegationTransaction,
-  ) => (_: undefined, row: DelegatorDelegationsRow) => React.ReactElement,
-): Array<ColumnType<DelegatorDelegationsRow>> => [
+export const createDelegatorDelegationsColumns = (): Array<
+  ColumnType<DelegatorDelegationsRow>
+> => [
   {
     title: createTitleWithTooltipDescription(
       titles.id,
@@ -232,27 +230,27 @@ export const createDelegatorDelegationsColumns = (
     align: "center",
     render: renderDate,
   },
-  {
-    title: createTitleWithTooltipDescription("Delegate"),
-    dataIndex: "delegate",
-    key: "delegate",
-    align: "center",
-    render: createTransactionButtonRenderer("delegate"),
-  },
-  {
-    title: createTitleWithTooltipDescription("Undelegate"),
-    dataIndex: "undelegate",
-    key: "undelegate",
-    align: "center",
-    render: createTransactionButtonRenderer("undelegate"),
-  },
-  {
-    title: createTitleWithTooltipDescription("Withdraw"),
-    dataIndex: "withdraw",
-    key: "withdraw",
-    align: "center",
-    render: createTransactionButtonRenderer("withdraw"),
-  },
+  // {
+  //   title: createTitleWithTooltipDescription("Delegate"),
+  //   dataIndex: "delegate",
+  //   key: "delegate",
+  //   align: "center",
+  //   render: createTransactionButtonRenderer("delegate"),
+  // },
+  // {
+  //   title: createTitleWithTooltipDescription("Undelegate"),
+  //   dataIndex: "undelegate",
+  //   key: "undelegate",
+  //   align: "center",
+  //   render: createTransactionButtonRenderer("undelegate"),
+  // },
+  // {
+  //   title: createTitleWithTooltipDescription("Withdraw"),
+  //   dataIndex: "withdraw",
+  //   key: "withdraw",
+  //   align: "center",
+  //   render: createTransactionButtonRenderer("withdraw"),
+  // },
 ];
 
 export const transformToRow = ({

@@ -99,18 +99,7 @@ export const DelegatorDelegations: React.FC<Props> = observer(({ id }) => {
     }
   }, [setTotal, delegatorDelegationsTotal]);
 
-  const {
-    showModal,
-    transaction,
-    currentIndexerId,
-    toggleModal,
-    createTransactionButtonRenderer,
-  } = useDelegationTransactions(id, currentAddress);
-
-  const columns = useMemo(
-    () => createDelegatorDelegationsColumns(createTransactionButtonRenderer),
-    [createTransactionButtonRenderer],
-  );
+  const columns = createDelegatorDelegationsColumns();
 
   if (isLoading) {
     return <TabPreloader />;
