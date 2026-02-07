@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import Link from "next/link";
 import { Arbitrum, Eth } from "./account-card.icons";
-import { IconBox } from "./account-card.styled"
+import { IconBox } from "./account-card.styled";
 
 import {
   Container,

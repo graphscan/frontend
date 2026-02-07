@@ -99,7 +99,7 @@ export const DelegatorDelegations: React.FC<Props> = observer(({ id }) => {
     }
   }, [setTotal, delegatorDelegationsTotal]);
 
-  const columns = createDelegatorDelegationsColumns()
+  const columns = createDelegatorDelegationsColumns();
 
   if (isLoading) {
     return <TabPreloader />;

@@ -53,7 +53,7 @@ export const Connection: React.FC<Props> = observer(({ showGlow = true }) => {
   const [showMenu, setShowMenu] = useState(false);
   const toggleMenu = useCallback(
     () => setShowMenu((prevState) => !prevState),
-    []
+    [],
   );
 
   const active = currentAddress !== null;
@@ -72,7 +72,7 @@ export const Connection: React.FC<Props> = observer(({ showGlow = true }) => {
         .then((accounts: string[]) => {
           if (
             accounts.some(
-              (a: string) => a.toLowerCase() === saved.toLowerCase()
+              (a: string) => a.toLowerCase() === saved.toLowerCase(),
             )
           ) {
             setCurrentAddress(saved);

@@ -32,11 +32,7 @@ export const useGRTBalance = (account: string | null | undefined) => {
 
     const tokenAddress = chainAddresses.L2GraphToken.address;
 
-    const token = new ethers.Contract(
-      tokenAddress,
-      grtTokenAbi,
-      web3Client
-    );
+    const token = new ethers.Contract(tokenAddress, grtTokenAbi, web3Client);
 
     const updateBalance = async () => {
       setBalance(await token.balanceOf(account));

@@ -43,7 +43,7 @@ const getBaseDelegationId = (id: string): string => {
  * Merges related delegatedStake entities that were split due to protocol upgrade.
  */
 export const mergeSplitDelegations = (
-  delegations: Array<DelegatorDelegation>
+  delegations: Array<DelegatorDelegation>,
 ): Array<DelegatorDelegation> => {
   const groupedByBase = new Map<string, Array<DelegatorDelegation>>();
 
@@ -147,7 +147,7 @@ export const createDelegatorDelegationsColumns = (): Array<
   {
     title: createTitleWithTooltipDescription(
       titles.id,
-      "The indexer’s Ethereum address or ENS."
+      "The indexer’s Ethereum address or ENS.",
     ),
     dataIndex: "id",
     key: "id",
@@ -156,7 +156,7 @@ export const createDelegatorDelegationsColumns = (): Array<
   {
     title: createTitleWithTooltipDescription(
       titles.currentDelegationAmount,
-      "Size of delegation to indexer."
+      "Size of delegation to indexer.",
     ),
     dataIndex: "currentDelegationAmount",
     key: "currentDelegationAmount",
@@ -165,7 +165,7 @@ export const createDelegatorDelegationsColumns = (): Array<
   {
     title: createTitleWithTooltipDescription(
       titles.shareAmount,
-      "Delegations share of chosen Indexer’s pool."
+      "Delegations share of chosen Indexer’s pool.",
     ),
     dataIndex: "shareAmount",
     key: "shareAmount",
@@ -174,7 +174,7 @@ export const createDelegatorDelegationsColumns = (): Array<
   {
     title: createTitleWithTooltipDescription(
       titles.stakedTokens,
-      "All-time delegations to the chosen Indexer."
+      "All-time delegations to the chosen Indexer.",
     ),
     dataIndex: "stakedTokens",
     key: "stakedTokens",
@@ -183,7 +183,7 @@ export const createDelegatorDelegationsColumns = (): Array<
   {
     title: createTitleWithTooltipDescription(
       titles.unstakedTokens,
-      "All-time undelegations from the chosen indexer."
+      "All-time undelegations from the chosen indexer.",
     ),
     dataIndex: "unstakedTokens",
     key: "unstakedTokens",
@@ -192,7 +192,7 @@ export const createDelegatorDelegationsColumns = (): Array<
   {
     title: createTitleWithTooltipDescription(
       titles.realizedRewards,
-      "The amount of <strong>already undelegated</strong> rewards from the chosen indexer."
+      "The amount of <strong>already undelegated</strong> rewards from the chosen indexer.",
     ),
     dataIndex: "realizedRewards",
     key: "realizedRewards",
@@ -201,7 +201,7 @@ export const createDelegatorDelegationsColumns = (): Array<
   {
     title: createTitleWithTooltipDescription(
       titles.unreleasedReward,
-      "The amount of <strong>accumulated and not yet undelegated</strong> rewards from the chosen indexer."
+      "The amount of <strong>accumulated and not yet undelegated</strong> rewards from the chosen indexer.",
     ),
     dataIndex: "unreleasedReward",
     key: "unreleasedReward",
@@ -210,7 +210,7 @@ export const createDelegatorDelegationsColumns = (): Array<
   {
     title: createTitleWithTooltipDescription(
       titles.unreleasedRewardsPercent,
-      "Ratio of Rewards to Stake."
+      "Ratio of Rewards to Stake.",
     ),
     dataIndex: "unreleasedRewardsPercent",
     key: "unreleasedRewardsPercent",
@@ -267,13 +267,13 @@ export const transformToRow = ({
   const { id, delegatorShares, delegationExchangeRate, defaultDisplayName } =
     indexer;
   const currentDelegationAmount = divideBy1e18(
-    calcStakeCurrentDelegation({ shareAmount, indexer })
+    calcStakeCurrentDelegation({ shareAmount, indexer }),
   );
 
   // Unrealized Rewards = (delegationExchangeRate - personalExchangeRate) * shareAmount
   const unrealizedRewards = divideBy1e18(
     (Number(delegationExchangeRate) - Number(personalExchangeRate)) *
-      Number(shareAmount)
+      Number(shareAmount),
   );
 
   const stakedTokensValue = divideBy1e18(stakedTokens);

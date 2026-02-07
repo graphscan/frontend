@@ -31,7 +31,7 @@ const App = ({ Component, pageProps }: AppProps) => {
   useEffect(() => {
     sessionStorage.setItem(
       HISTORY_APY_REQUEST_TIME_STORAGE_KEY,
-      String(Date.now())
+      String(Date.now()),
     );
   }, []);
 
