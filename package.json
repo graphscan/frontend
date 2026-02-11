@@ -15,6 +15,7 @@
     "date-fns": "^4.1.0",
     "ethers": "^6.16.0",
     "graphql-request": "^5.0.0",
+    "mapbox-gl": "^2.15.0",
     "mobx": "^6.15.0",
     "mobx-react-lite": "^3.4.3",
     "next": "^16.1.6",
@@ -26,7 +27,7 @@
     "react": "^19.2.4",
     "react-animate-height": "^3.1.1",
     "react-dom": "^19.2.4",
-    "react-map-gl": "^7.0.19",
+    "react-map-gl": "^7.1.9",
     "react-plotly.js": "^2.6.0",
     "react-responsive": "^9.0.0-beta.5",
     "react-select": "^5.10.2",
@@ -35,17 +36,21 @@
     "styled-components": "^6.3.8"
   },
   "devDependencies": {
-    "@types/react-plotly.js": "^2.5.2",
     "@types/node": "^25.0.0",
     "@types/papaparse": "^5.5.2",
+    "@types/plotly.js": "^2.29.2",
     "@types/ramda": "^0.31.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@types/plotly.js": "^2.29.2",
+    "@types/react-plotly.js": "^2.5.2",
+    "graphql": "^16",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=24.0.0"
+  },
+  "resolutions": {
+    "@types/plotly.js": "^2.29.2"
   }
 }
