@@ -27,7 +27,7 @@ export const TabsInput: React.FC = observer(() => {
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
 
-    if (!/(^[-\w \.]+$|^$)/.test(input)) {
+    if (!/(^[-\p{L}\d_ \.]+$|^$)/u.test(input)) {
       return;
     }
 
