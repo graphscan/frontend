@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES20",
+    "target": "ES2023",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
@@ -28,6 +28,6 @@
     "**/*.tsx",
     "styled.d.ts",
     ".next/types/**/*.ts"
-  ],
+, "src/components/profile/components/account-card/components/notification-modal/notification-modal.styled.ts.bkp", "src/components/profile/components/account-card/components/notification-modal/notification-modal.icons.tsx.bkp", "src/components/profile/components/account-card/components/notification-modal/notification-modal.component.tsx.bkp"  ],
   "exclude": ["node_modules"]
 }

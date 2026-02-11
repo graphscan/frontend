@@ -9,7 +9,7 @@ import {
   useDelegatorDelegations,
   useDelegatorDelegationsCsv,
 } from "./delegator-delegations.service";
-import { useDelegationTransactions } from "./delegator-delegations.utils";
+// import { useDelegationTransactions } from "./delegator-delegations.utils";
 // import { Web3Delegation } from '../../../web3-delegation.disabled/web3-delegation.component';
 import { Empty } from "../../../../../common/empty/empty.component";
 import { Modal } from "../../../../../common/modal/modal.component";

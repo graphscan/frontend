@@ -37,6 +37,7 @@ const StyledDocsLinks = styled.section`
 `;
 
 export const DocsLinks: React.FC = () => {
+  return <StyledDocsLinks />;
   return (
     <StyledDocsLinks>
       <Link href="/policy">Policy and Privacy</Link>

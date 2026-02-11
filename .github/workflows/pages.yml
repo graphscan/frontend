@@ -32,16 +32,16 @@ jobs:
 
       - name: Build
         env:
-          IS_TECHNICAL_WORKS: "false"
-          SUBGRAPH_ANALYTICS_URL: https://gateway.thegraph.com/api/subgraphs/id/AgV4u2z1BFZKSj4Go1AdQswUGW2FcAtnPhifd4V7NLVz
-          SUBGRAPH_MAIN_URL: https://gateway.thegraph.com/api/subgraphs/id/DZz4kDTdmzWLWsV373w2bSmoar3umKKH9y82SUKr5qmp
-          WEB3_RPC: https://arbitrum-one-rpc.publicnode.com
-          ETHEREUM_EXPLORER: https://etherscan.io
-          THEGRAPH_EXPLORER: https://thegraph.com
-          ACCEPTABLE_DELAY: "10"
+          NEXT_PUBLIC_IS_TECHNICAL_WORKS: "false"
+          NEXT_PUBLIC_SUBGRAPH_ANALYTICS_URL: https://gateway.thegraph.com/api/subgraphs/id/AgV4u2z1BFZKSj4Go1AdQswUGW2FcAtnPhifd4V7NLVz
+          NEXT_PUBLIC_SUBGRAPH_MAIN_URL: https://gateway.thegraph.com/api/subgraphs/id/DZz4kDTdmzWLWsV373w2bSmoar3umKKH9y82SUKr5qmp
+          NEXT_PUBLIC_ETHEREUM_EXPLORER: https://arbitrum-one-rpc.publicnode.com
+          NEXT_PUBLIC_ETHEREUM_EXPLORER: https://etherscan.io
+          NEXT_PUBLIC_THEGRAPH_EXPLORER: https://thegraph.com
+          NEXT_PUBLIC_ACCEPTABLE_DELAY: "10"
           PARTNERS: Ryabina::0x01234567890123456789012345678901234567890123,cp0x::0x01234567890123456789012345678901234567890123
-          ENS_URL: https://gateway.thegraph.com/api/subgraphs/id/5XqPmWe6gjyrJtFn9cLy237i4cWw2j9HcUJEXsP5qGtH
-          GRAPH_API_KEY: ${{ secrets.GRAPH_API_KEY }}
+          NEXT_PUBLIC_ENS_URL: https://gateway.thegraph.com/api/subgraphs/id/5XqPmWe6gjyrJtFn9cLy237i4cWw2j9HcUJEXsP5qGtH
+          NEXT_PUBLIC_GRAPH_API_KEY: ${{ secrets.NEXT_PUBLIC_GRAPH_API_KEY }}
         run: yarn build
 
       - name: Upload pages artifact
