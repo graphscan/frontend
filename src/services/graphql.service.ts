@@ -4,8 +4,6 @@ import {
   RequestDocument,
   Variables,
 } from "graphql-request";
-import { RemoveIndex } from "graphql-request/dist/types";
-import * as Dom from "graphql-request/dist/types.dom";
 import { getEnvVariables } from "../utils/env.utils";
 
 export const REQUEST_LIMIT = 1000;
@@ -36,20 +34,17 @@ export const fetchAllParallel = <T>(
     ),
   ).then((response) => response.flat());
 
+// cleanup that terrible code
 const createRequest =
   (getUrl: () => string) =>
-  <T = unknown, V = Variables>(
+  <T = unknown, V extends Variables = Variables>(
     document: RequestDocument | TypedDocumentNode<T, V>,
-    ..._variablesAndRequestHeaders: V extends Record<string, never>
-      ? [variables?: V, requestHeaders?: Dom.RequestInit["headers"]]
-      : keyof RemoveIndex<V> extends never
-        ? [variables?: V, requestHeaders?: Dom.RequestInit["headers"]]
-        : [variables: V, requestHeaders?: Dom.RequestInit["headers"]]
+    ..._variablesAndRequestHeaders: any
   ) => {
     const env = getEnvVariables();
     const [variables, requestHeaders] = _variablesAndRequestHeaders;
 
-    const headers: Dom.RequestInit["headers"] = {
+    const headers: any = {
       ...requestHeaders,
       ...(env.graphApiKey
         ? { Authorization: `Bearer ${env.graphApiKey}` }

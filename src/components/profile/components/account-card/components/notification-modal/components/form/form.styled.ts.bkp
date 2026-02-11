@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { formWidth } from "../../notification-modal.styled";
+import { formWidth } from "../../notification-modal.styled.ts.bkp";
 import { Select as _Select } from "../../../../../../../common/select/select.component";
 
 export const StyledForm = styled.article`

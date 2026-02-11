@@ -21,7 +21,7 @@ export default class MyDocument extends Document {
             <link
               key="mapbox-gl-css"
               rel="stylesheet"
-              href="https://api.mapbox.com/mapbox-gl-js/v2.1.1/mapbox-gl.css"
+              href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css"
             />
             {initialProps.styles}
             {sheet.getStyleElement()}

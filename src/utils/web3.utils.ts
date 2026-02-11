@@ -1,21 +1,16 @@
 import { useEffect, useState } from "react";
 import { ethers, formatUnits } from "ethers";
-import addresses from "@graphprotocol/contracts/addresses.json";
-import grtTokenAbi from "@graphprotocol/contracts/dist/abis/GraphToken.json";
-import { isKey } from "./object.utils";
 
 import { web3Client } from "../services/web3.service";
 
 export const getSupportedChainId = () => {
   const chainId = "42161" as const;
 
-  if (!isKey(chainId, addresses)) {
-    throw new Error("Provided CHAIN_ID is not supported");
-  }
-
   return chainId;
 };
-
+const grtTokenAbi = [
+  "function balanceOf(address owner) view returns (uint256)",
+]
 export const useGRTBalance = (account: string | null | undefined) => {
   const [balance, setBalance] = useState(0n);
 
@@ -28,9 +23,8 @@ export const useGRTBalance = (account: string | null | undefined) => {
       return;
     }
 
-    const chainAddresses = addresses[chainId];
 
-    const tokenAddress = chainAddresses.L2GraphToken.address;
+    const tokenAddress = "0x9623063377ad1b27544c965ccd7342f7ea7e88c7";
 
     const token = new ethers.Contract(tokenAddress, grtTokenAbi, web3Client);
 
