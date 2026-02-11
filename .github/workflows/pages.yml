@@ -41,7 +41,7 @@ jobs:
           NEXT_PUBLIC_ACCEPTABLE_DELAY: "10"
           NEXT_PUBLIC_PARTNERS: Ryabina::0x9da1017766bfeb2835db4f811516eea68996538b,cp0x::0x6f9bb7e454f5b3eb2310343f0e99269dc2bb8a1d
           NEXT_PUBLIC_ENS_URL: https://gateway.thegraph.com/api/subgraphs/id/5XqPmWe6gjyrJtFn9cLy237i4cWw2j9HcUJEXsP5qGtH
-          NEXT_PUBLIC_GRAPH_API_KEY: ${{ secrets.NEXT_PUBLIC_GRAPH_API_KEY }}
+          NEXT_PUBLIC_GRAPH_API_KEY: ${{ secrets.GRAPH_API_KEY }}
         run: yarn build
 
       - name: Upload pages artifact
