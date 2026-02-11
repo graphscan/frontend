@@ -9,20 +9,19 @@
   },
   "type": "module",
   "dependencies": {
-    "@graphprotocol/contracts": "6.2.1",
     "@tanstack/react-query": "^4.42.2",
     "antd": "^4.16.0",
-    "bs58": "^4.0.1",
-    "date-fns": "^2.17.0",
+    "bs58": "^6.0.0",
+    "date-fns": "^4.1.0",
     "ethers": "^6.16.0",
     "graphql-request": "^5.0.0",
     "mobx": "^6.15.0",
     "mobx-react-lite": "^3.4.3",
-    "next": "^16.1.5",
+    "next": "^16.1.6",
     "numbro": "^2.5.0",
     "papaparse": "^5.5.3",
-    "plotly.js": "^2.15.1",
-    "ramda": "^0.27.1",
+    "plotly.js": "^2.35.3",
+    "ramda": "^0.32.0",
     "rc-resize-observer": "^1.4.3",
     "react": "^19.2.4",
     "react-animate-height": "^3.1.1",
@@ -36,24 +35,17 @@
     "styled-components": "^6.3.8"
   },
   "devDependencies": {
-    "@types/bs58": "^4.0.1",
-    "@types/date-fns": "^2.6.0",
-    "@types/gtag.js": "^0.0.12",
-    "@types/node": "^25.0.0",
-    "@types/numbro": "^1.9.3",
-    "@types/papaparse": "^5.2.5",
-    "@types/ramda": "^0.27.38",
-    "@types/react": "^19.2.10",
-    "@types/react-dom": "^19.2.3",
     "@types/react-plotly.js": "^2.5.2",
+    "@types/node": "^25.0.0",
+    "@types/papaparse": "^5.5.2",
+    "@types/ramda": "^0.31.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@types/plotly.js": "^2.29.2",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=24.0.0"
-  },
-  "resolutions": {
-    "@types/react": "^19.2.10",
-    "@types/react-dom": "^19.2.3"
   }
 }
