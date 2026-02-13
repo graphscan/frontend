@@ -59,7 +59,13 @@ export const IndexerAllocations: React.FC<Props> = observer(({ id }) => {
   const { data: count } = useIndexerAllocationsCount(id);
 
   const rows = useMemo(
-    () => (data ? createTransformerToRows(allocationsRewards)(data) : []),
+    () =>
+      data
+        ? createTransformerToRows(
+            allocationsRewards,
+            data.indexerDailyData,
+          )(data)
+        : [],
     [allocationsRewards, data],
   );
 

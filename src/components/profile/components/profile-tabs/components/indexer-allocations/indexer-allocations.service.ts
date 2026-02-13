@@ -9,9 +9,12 @@ import {
   transformToCsvRow,
 } from "./indexer-allocations.model";
 import { SortParams } from "../../../../../../model/sort.model";
+import { IndexerDailyData } from "../../../../../../model/allocation-rewards.model";
 import {
+  fetchAllConsecutively,
   fetchAllParallel,
   request,
+  requestAnalytics,
   REQUEST_LIMIT,
 } from "../../../../../../services/graphql.service";
 import { downloadCsv } from "../../../../../../utils/csv.utils";
@@ -99,6 +102,35 @@ type IndexerAllocationsResponse = {
   allocations: Array<IndexerAllocation>;
 };
 
+type IndexerDailyDataResponse = {
+  indexerDailyDatas: Array<IndexerDailyData>;
+};
+
+const createIndexerDailyDataFetcher =
+  (indexerId: string) => async (skip: number) => {
+    const { indexerDailyDatas } =
+      await requestAnalytics<IndexerDailyDataResponse>(gql`
+        query {
+          indexerDailyDatas(
+            first: ${REQUEST_LIMIT}
+            skip: ${skip}
+            orderBy: dayEnd
+            orderDirection: desc
+            where: { indexer: ${JSON.stringify(indexerId.toLowerCase())} }
+          ) {
+            dayEnd
+            dayStart
+            ownStakeRatio
+            delegatedTokens
+          }
+        }
+      `);
+    return indexerDailyDatas;
+  };
+
+const fetchIndexerDailyData = (indexerId: string) =>
+  fetchAllConsecutively(createIndexerDailyDataFetcher(indexerId));
+
 export const useIndexerAllocations = ({
   id,
   currentPage,
@@ -121,25 +153,29 @@ export const useIndexerAllocations = ({
       const { totalTokensAllocated, totalTokensSignalled, currentEpoch } =
         networkData;
 
-      const { allocations } = await request<IndexerAllocationsResponse>(
-        gql`
-          ${indexerAllocationFragment}
-          query {
-            allocations(
-              first: ${perPage}
-              skip: ${perPage * (currentPage - 1)}
-              orderBy: ${sortParams.orderBy}
-              orderDirection: ${sortParams.orderDirection}
-              where: { indexer: ${JSON.stringify(id.toLowerCase())} }
-            ) {
-              ...IndexerAllocationFragment
+      const [{ allocations }, indexerDailyData] = await Promise.all([
+        request<IndexerAllocationsResponse>(
+          gql`
+            ${indexerAllocationFragment}
+            query {
+              allocations(
+                first: ${perPage}
+                skip: ${perPage * (currentPage - 1)}
+                orderBy: ${sortParams.orderBy}
+                orderDirection: ${sortParams.orderDirection}
+                where: { indexer: ${JSON.stringify(id.toLowerCase())} }
+              ) {
+                ...IndexerAllocationFragment
+              }
             }
-          }
-        `,
-      );
+          `,
+        ),
+        fetchIndexerDailyData(id),
+      ]);
 
       return {
         allocations,
+        indexerDailyData,
         totalTokensAllocated,
         totalTokensSignalled,
         currentEpoch,
@@ -179,13 +215,14 @@ const download = (
     totalTokensAllocated: string;
     totalTokensSignalled: string;
   },
+  indexerDailyData: Array<IndexerDailyData>,
   sortParams: SortParams<IndexerAllocationsRow>,
 ) =>
   downloadCsv(
     compose(
       map(transformToCsvRow),
       sortRows(sortParams),
-      createTransformerToRows(),
+      createTransformerToRows({}, indexerDailyData),
     )(data),
     "indexer-allocations",
   );
@@ -235,21 +272,31 @@ export const useIndexerAllocationsCsv = (
       }
 
       const { totalTokensAllocated, totalTokensSignalled } = networkData;
-      const allocations = await fetchAllParallel(
-        allocationsCount,
-        createIndexerAllocationsFetcher(id),
-      );
+      const [allocations, indexerDailyData] = await Promise.all([
+        fetchAllParallel(
+          allocationsCount,
+          createIndexerAllocationsFetcher(id),
+        ),
+        fetchIndexerDailyData(id),
+      ]);
 
-      return { allocations, totalTokensAllocated, totalTokensSignalled };
+      return {
+        allocations,
+        indexerDailyData,
+        totalTokensAllocated,
+        totalTokensSignalled,
+      };
     },
     { enabled: false },
   );
 
   const handleCsvDownload = useCallback(() => {
     data
-      ? download(data, sortParams)
+      ? download(data, data.indexerDailyData, sortParams)
       : refetch().then((res) =>
-          res.data ? download(res.data, sortParams) : res,
+          res.data
+            ? download(res.data, res.data.indexerDailyData, sortParams)
+            : res,
         );
   }, [data, refetch, sortParams]);
 

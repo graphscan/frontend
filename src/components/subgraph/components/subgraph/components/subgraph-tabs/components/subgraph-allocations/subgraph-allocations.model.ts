@@ -15,7 +15,9 @@ import {
 } from "../../../../../../../../utils/table.utils";
 import {
   AllocationsRewards,
+  IndexerDailyData,
   PotentialRewards,
+  findDailyDataAtClose,
 } from "../../../../../../../../model/allocation-rewards.model";
 import { dhm } from "../../../../../../../../utils/date.utils";
 import {
@@ -29,7 +31,8 @@ export type SubgraphAllocation = {
     id: string;
     defaultDisplayName: string | null;
     indexingRewardCut: number;
-    indexingRewardEffectiveCut: string;
+    ownStakeRatio: string;
+    delegatedTokens: string;
   };
   status: "Active" | "Closed" | "Finalized" | "Claimed";
   allocatedTokens: string;
@@ -152,7 +155,7 @@ export const createColumns = (
       typeof value === "number"
         ? renderFormattedToPercentValueWithSeparatedValuesInTooltip(
             "Indexing Reward Cut",
-            "potentialIndexingRewardCut",
+            "indexingRewardCutAtClose",
           )(value, row)
         : value,
   },
@@ -199,10 +202,12 @@ export const createTransformerToRow =
     {
       allocationsRewards,
       currentEpoch,
+      dailyDataByIndexer,
     }: {
-      allocationsRewards: AllocationsRewards;
-      currentEpoch: number;
-    } = { allocationsRewards: {}, currentEpoch: 0 },
+      allocationsRewards?: AllocationsRewards;
+      currentEpoch?: number;
+      dailyDataByIndexer?: Record<string, Array<IndexerDailyData>>;
+    } = {},
   ) =>
   ({
     id,
@@ -219,7 +224,8 @@ export const createTransformerToRow =
     indexingDelegatorRewards,
     poi,
   }: SubgraphAllocation): SubgraphAllocationsRow => {
-    const rewards: PotentialRewards | undefined = allocationsRewards[id];
+    const rewards: PotentialRewards | undefined =
+      (allocationsRewards ?? {})[id];
 
     return {
       id,
@@ -233,12 +239,42 @@ export const createTransformerToRow =
       activeStateDuration: dhm(
         (closedAt ? closedAt * 1000 : Date.now()) - createdAt * 1000,
       ),
-      indexingRewardEffectiveCutAtClose:
-        status === "Active" && rewards
-          ? Number(indexer.indexingRewardEffectiveCut)
-          : typeof indexingRewardEffectiveCutAtClose === "string"
-            ? Number(indexingRewardEffectiveCutAtClose)
-            : null,
+      indexingRewardEffectiveCutAtClose: (() => {
+        // Formula: 1 - (1 - cut) / (1 - ownStakeRatio)
+        if (status === "Active" && rewards) {
+          // Active: calculate from current indexer data
+          const ownStakeRatio = Number(indexer.ownStakeRatio);
+          const hasDelegations = Number(indexer.delegatedTokens) > 0;
+          const cut = divideBy1e6(indexer.indexingRewardCut);
+          return hasDelegations && ownStakeRatio < 1
+            ? 1 - (1 - cut) / (1 - ownStakeRatio)
+            : null;
+        }
+
+        // For Closed/Finalized/Claimed: use historical dailyData at close time
+        if (
+          typeof indexingRewardCutAtClose === "number" &&
+          closedAt !== null
+        ) {
+          const indexerDailyData =
+            (dailyDataByIndexer ?? {})[indexer.id] ?? [];
+          const dailyDataAtClose = findDailyDataAtClose(
+            indexerDailyData,
+            closedAt,
+          );
+          if (dailyDataAtClose) {
+            const cut = divideBy1e6(indexingRewardCutAtClose);
+            const ownStakeRatio = Number(dailyDataAtClose.ownStakeRatio);
+            const hasDelegations =
+              Number(dailyDataAtClose.delegatedTokens) > 0;
+            return hasDelegations && ownStakeRatio < 1
+              ? 1 - (1 - cut) / (1 - ownStakeRatio)
+              : null;
+          }
+        }
+
+        return null;
+      })(),
       indexingRewardCutAtClose:
         status === "Active" && rewards
           ? divideBy1e6(indexer.indexingRewardCut)
@@ -255,7 +291,7 @@ export const createTransformerToRow =
           : divideBy1e18(indexingDelegatorRewards),
       potentialIndexingRewardCut: divideBy1e6(indexer.indexingRewardCut),
       poi,
-      lifetimeEpochs: (closedAtEpoch ?? currentEpoch) - createdAtEpoch,
+      lifetimeEpochs: (closedAtEpoch ?? (currentEpoch ?? 0)) - createdAtEpoch,
     };
   };
 

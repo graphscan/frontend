@@ -2,7 +2,9 @@ import { isNil } from "ramda";
 import { ColumnType } from "antd/es/table";
 import {
   AllocationsRewards,
+  IndexerDailyData,
   PotentialRewards,
+  findDailyDataAtClose,
 } from "../../../../../../model/allocation-rewards.model";
 import { SubgraphStates } from "../../../../../../model/subgraph-states.model";
 import { dhm } from "../../../../../../utils/date.utils";
@@ -273,10 +275,10 @@ export const createColumns = (
     dataIndex: "indexingRewardEffectiveCutAtClose",
     key: "indexingRewardEffectiveCutAtClose",
     render: (value, row) =>
-      value
+      typeof value === "number"
         ? renderFormattedToPercentValueWithSeparatedValuesInTooltip(
             "Indexing Reward Cut",
-            "indexingRewardCut",
+            "indexingRewardCutAtClose",
           )(value, row)
         : value,
   },
@@ -348,7 +350,10 @@ export const createColumns = (
 ];
 
 export const createTransformerToRows =
-  (allocationsRewards: AllocationsRewards = {}) =>
+  (
+    allocationsRewards: AllocationsRewards = {},
+    indexerDailyData: Array<IndexerDailyData> = [],
+  ) =>
   ({
     allocations,
     currentEpoch = 0,
@@ -445,18 +450,38 @@ export const createTransformerToRows =
           (closedAt ? closedAt * 1000 : Date.now()) - createdAt * 1000,
         ),
         indexingRewardEffectiveCutAtClose: (() => {
+          // Formula: 1 - (1 - cut) / (1 - ownStakeRatio)
           if (status === "Active" && rewards) {
-            // Calculate effective cut using ownStakeRatio
-            const cut = divideBy1e6(indexer.indexingRewardCut);
+            // Active: use current indexer data
             const ownStakeRatio = Number(indexer.ownStakeRatio);
             const hasDelegations = Number(indexer.delegatedTokens) > 0;
+            const cut = divideBy1e6(indexer.indexingRewardCut);
             return hasDelegations && ownStakeRatio < 1
               ? 1 - (1 - cut) / (1 - ownStakeRatio)
-              : cut;
+              : null;
           }
-          return typeof indexingRewardEffectiveCutAtClose === "string"
-            ? Number(indexingRewardEffectiveCutAtClose)
-            : null;
+
+          // For Closed/Finalized/Claimed: use historical dailyData at close time
+          if (
+            typeof indexingRewardCutAtClose === "number" &&
+            closedAt !== null
+          ) {
+            const dailyDataAtClose = findDailyDataAtClose(
+              indexerDailyData,
+              closedAt,
+            );
+            if (dailyDataAtClose) {
+              const cut = divideBy1e6(indexingRewardCutAtClose);
+              const ownStakeRatio = Number(dailyDataAtClose.ownStakeRatio);
+              const hasDelegations =
+                Number(dailyDataAtClose.delegatedTokens) > 0;
+              return hasDelegations && ownStakeRatio < 1
+                ? 1 - (1 - cut) / (1 - ownStakeRatio)
+                : null;
+            }
+          }
+
+          return null;
         })(),
         indexingRewardCutAtClose:
           status === "Active" && rewards

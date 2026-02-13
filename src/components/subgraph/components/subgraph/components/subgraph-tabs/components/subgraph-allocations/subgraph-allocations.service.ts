@@ -9,9 +9,11 @@ import {
   transformToCsvRow,
 } from "./subgraph-allocations.model";
 import { SortParams } from "../../../../../../../../model/sort.model";
+import { IndexerDailyData } from "../../../../../../../../model/allocation-rewards.model";
 import {
   fetchAllConsecutively,
   request,
+  requestAnalytics,
   REQUEST_LIMIT,
 } from "../../../../../../../../services/graphql.service";
 import { sortRows } from "../../../../../../../../utils/table.utils";
@@ -31,7 +33,8 @@ const subgraphAllocationFragment = gql`
       id
       defaultDisplayName
       indexingRewardCut
-      indexingRewardEffectiveCut
+      ownStakeRatio
+      delegatedTokens
     }
     status
     allocatedTokens
@@ -53,6 +56,59 @@ type SubgraphAllocationsResponse = {
       indexerAllocations: Array<SubgraphAllocation>;
     };
   };
+};
+
+type IndexerDailyDataResponse = {
+  indexerDailyDatas: Array<IndexerDailyData>;
+};
+
+const createDailyDataFetcher =
+  (indexerId: string) => async (skip: number) => {
+    const { indexerDailyDatas } =
+      await requestAnalytics<IndexerDailyDataResponse>(gql`
+        query {
+          indexerDailyDatas(
+            first: ${REQUEST_LIMIT}
+            skip: ${skip}
+            orderBy: dayEnd
+            orderDirection: desc
+            where: { indexer: ${JSON.stringify(indexerId.toLowerCase())} }
+          ) {
+            dayEnd
+            dayStart
+            ownStakeRatio
+            delegatedTokens
+          }
+        }
+      `);
+    return indexerDailyDatas;
+  };
+
+const fetchDailyDataByIndexer = async (
+  allocations: Array<SubgraphAllocation>,
+): Promise<Record<string, Array<IndexerDailyData>>> => {
+  const closedIndexerIds = [
+    ...new Set(
+      allocations
+        .filter((a) => a.status !== "Active" && a.closedAt !== null)
+        .map((a) => a.indexer.id),
+    ),
+  ];
+
+  if (closedIndexerIds.length === 0) {
+    return {};
+  }
+
+  const results = await Promise.all(
+    closedIndexerIds.map(async (indexerId) => {
+      const dailyData = await fetchAllConsecutively(
+        createDailyDataFetcher(indexerId),
+      );
+      return [indexerId, dailyData] as const;
+    }),
+  );
+
+  return Object.fromEntries(results);
 };
 
 export const useSubgraphAllocations = ({
@@ -84,7 +140,11 @@ export const useSubgraphAllocations = ({
         `,
       );
 
-      return subgraphVersion.subgraphDeployment.indexerAllocations;
+      const allocations =
+        subgraphVersion.subgraphDeployment.indexerAllocations;
+      const dailyDataByIndexer = await fetchDailyDataByIndexer(allocations);
+
+      return { allocations, dailyDataByIndexer };
     },
     { keepPreviousData: true },
   );
@@ -128,13 +188,14 @@ export const useSubgraphAllocationsCount = (id: string) => {
 
 const download = (
   data: Array<SubgraphAllocation>,
+  dailyDataByIndexer: Record<string, Array<IndexerDailyData>>,
   sortParams: SortParams<SubgraphAllocationsRow>,
 ) =>
   downloadCsv(
     compose(
       map(transformToCsvRow),
       sortRows(sortParams),
-      map(createTransformerToRow()),
+      map(createTransformerToRow({ dailyDataByIndexer })),
     )(data),
     "subgraph-allocations",
   );
@@ -172,17 +233,24 @@ export const useSubgraphAllocationsCsv = (
       const allocations = await fetchAllConsecutively(
         createSubgraphAllocationsFetcher(id),
       );
+      const dailyDataByIndexer = await fetchDailyDataByIndexer(allocations);
 
-      return allocations;
+      return { allocations, dailyDataByIndexer };
     },
     { enabled: false },
   );
 
   const handleCsvDownload = useCallback(() => {
     data
-      ? download(data, sortParams)
+      ? download(data.allocations, data.dailyDataByIndexer, sortParams)
       : refetch().then((res) =>
-          res.data ? download(res.data, sortParams) : res,
+          res.data
+            ? download(
+                res.data.allocations,
+                res.data.dailyDataByIndexer,
+                sortParams,
+              )
+            : res,
         );
   }, [data, refetch, sortParams]);
 

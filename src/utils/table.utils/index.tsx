@@ -386,7 +386,7 @@ export const renderEffectiveRealTooltip = ({
   </div>
   <div>
     <p class="tooltip-grid__title">${realTitle}</p>
-    <p>${formatNumber(realValue * 100, 2)}%</p>
+    <p>${typeof realValue === "number" && !Number.isNaN(realValue) ? `${formatNumber(realValue * 100, 2)}%` : "-"}</p>
   </div>
 </div>
 `;

@@ -54,7 +54,7 @@ export const SubgraphAllocations: React.FC<Props> = observer(({ id }) => {
   const { allocationsRewards, renderRewardsButton } = useAllocationsRewards();
 
   const {
-    data: subgraphAllocations,
+    data: subgraphAllocationsData,
     error,
     isFetching,
     isLoading,
@@ -68,20 +68,22 @@ export const SubgraphAllocations: React.FC<Props> = observer(({ id }) => {
   const { data: count } = useSubgraphAllocationsCount(id);
 
   const { data: ens } = useEnsAccounts(
-    subgraphAllocations
+    subgraphAllocationsData?.allocations
       ?.filter(({ indexer }) => !indexer.defaultDisplayName)
       .map(({ indexer }) => indexer.id),
   );
 
   const rows = useMemo(() => {
-    if (subgraphAllocations && graphNetwork) {
+    if (subgraphAllocationsData && graphNetwork) {
+      const { allocations, dailyDataByIndexer } = subgraphAllocationsData;
       const transformToRow = createTransformerToRow({
         allocationsRewards,
         currentEpoch: graphNetwork.currentEpoch,
+        dailyDataByIndexer,
       });
 
       if (ens) {
-        return subgraphAllocations.map((allocation) => {
+        return allocations.map((allocation) => {
           const { indexer } = allocation;
 
           if (indexer.id in ens) {
@@ -96,11 +98,11 @@ export const SubgraphAllocations: React.FC<Props> = observer(({ id }) => {
         });
       }
 
-      return subgraphAllocations.map(transformToRow);
+      return allocations.map(transformToRow);
     }
 
     return [];
-  }, [allocationsRewards, ens, graphNetwork, subgraphAllocations]);
+  }, [allocationsRewards, ens, graphNetwork, subgraphAllocationsData]);
 
   const { isCsvLoading, handleCsvDownload } = useSubgraphAllocationsCsv(
     id,
