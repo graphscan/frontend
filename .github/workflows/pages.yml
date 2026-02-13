@@ -33,10 +33,10 @@ jobs:
       - name: Build
         env:
           NEXT_PUBLIC_IS_TECHNICAL_WORKS: "false"
-          NEXT_PUBLIC_SUBGRAPH_ANALYTICS_URL: https://gateway.thegraph.com/api/subgraphs/id/AgV4u2z1BFZKSj4Go1AdQswUGW2FcAtnPhifd4V7NLVz
-          NEXT_PUBLIC_SUBGRAPH_MAIN_URL: https://gateway.thegraph.com/api/subgraphs/id/DZz4kDTdmzWLWsV373w2bSmoar3umKKH9y82SUKr5qmp
+          NEXT_PUBLIC_SUBGRAPH_ANALYTICS_URL: https://gateway.thegraph.com/api/deployments/id/QmdUX1idmKpgo2BySQncVtEWSfdsqEw2PhtYQaLc4ki8nC
+          NEXT_PUBLIC_SUBGRAPH_MAIN_URL: https://gateway.thegraph.com/api/deployments/id/QmShoo2ciLsHn5QTeeJ7GrQbQsCNnojnRaXDUTERoKn7Go
           NEXT_PUBLIC_WEB3_RPC: https://arbitrum-one-rpc.publicnode.com
-          NEXT_PUBLIC_ETHEREUM_EXPLORER: https://etherscan.io
+          NEXT_PUBLIC_EXPLORER: https://arbiscan.io
           NEXT_PUBLIC_THEGRAPH_EXPLORER: https://thegraph.com
           NEXT_PUBLIC_ACCEPTABLE_DELAY: "10"
           NEXT_PUBLIC_PARTNERS: Ryabina::0x9da1017766bfeb2835db4f811516eea68996538b,cp0x::0x6f9bb7e454f5b3eb2310343f0e99269dc2bb8a1d

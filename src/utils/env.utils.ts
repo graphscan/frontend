@@ -10,7 +10,7 @@ export const getEnvVariables = () => ({
   subgraphAnalyticsUrl: process.env.NEXT_PUBLIC_SUBGRAPH_ANALYTICS_URL!,
   subgraphMainUrl: process.env.NEXT_PUBLIC_SUBGRAPH_MAIN_URL!,
   web3Rpc: process.env.NEXT_PUBLIC_WEB3_RPC!,
-  ethereumExplorer: process.env.NEXT_PUBLIC_ETHEREUM_EXPLORER,
+  ethereumExplorer: process.env.NEXT_PUBLIC_EXPLORER,
   thegraphExplorer: process.env.NEXT_PUBLIC_THEGRAPH_EXPLORER,
   acceptableDelay: Number(process.env.NEXT_PUBLIC_ACCEPTABLE_DELAY),
   partners:

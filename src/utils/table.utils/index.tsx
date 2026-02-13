@@ -64,7 +64,6 @@ export const renderAccountId =
     const partner: Partner | undefined = TECHNICAL_PARTNERS.find(
       ({ address }: Partner) => address.toLowerCase() === value.toLowerCase(),
     );
-    console.log(TECHNICAL_PARTNERS, value);
     const tooltipName =
       typeof row.name === "string"
         ? row.name.length > DEFAULT_MAX_LENGTH
