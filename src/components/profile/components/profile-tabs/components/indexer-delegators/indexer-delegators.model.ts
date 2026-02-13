@@ -7,7 +7,9 @@ import {
   renderFormattedHighlightedValue,
   renderFormattedToPercentValue,
   renderDate,
+  renderLockedUntil,
   formatTableDate,
+  formatLockedUntil,
 } from "../../../../../../utils/table.utils";
 import { calcStakeCurrentDelegation } from "../../../../../../utils/delegators.utils";
 
@@ -23,6 +25,8 @@ export type IndexerDelegator = {
   createdAt: number;
   lastDelegatedAt: number | null;
   lastUndelegatedAt: number | null;
+  lockedUntil: number;
+  lockedTokens: string;
   indexer: {
     id: string;
     delegatorShares: string;
@@ -98,6 +102,10 @@ export const mergeSplitDelegations = (
         lastUndelegatedAt:
           group.find((d) => d.lastUndelegatedAt !== null)?.lastUndelegatedAt ??
           null,
+        lockedUntil: Math.max(...group.map((d) => d.lockedUntil)),
+        lockedTokens: group
+          .reduce((sum, d) => sum + Number(d.lockedTokens), 0)
+          .toString(),
         // Take personalExchangeRate from entity with positive shareAmount (real rate, not "1")
         personalExchangeRate: primary.personalExchangeRate,
       };
@@ -122,6 +130,8 @@ export type IndexerDelegatorsRow = {
   unreleasedRewardsPercent: number;
   createdAt: number;
   lastUndelegatedAt: number | null;
+  lockedUntil: number;
+  lockedTokens: number;
 };
 
 const titles: Record<
@@ -138,13 +148,15 @@ const titles: Record<
   unreleasedRewardsPercent: "Unrealized %",
   createdAt: "Delegation Created",
   lastUndelegatedAt: "Last Undelegation",
+  lockedTokens: "Locked Tokens",
+  lockedUntil: "Locked Until",
 };
 
 export const columnsWidth = {
-  "2560": [187, 204, 204, 204, 204, 204, 204, 204, 225, 225],
-  "1920": [172, 123, 123, 129, 123, 122, 122, 122, 202, 202],
-  "1440": [151, 109, 109, 115, 109, 109, 109, 109, 180, 180],
-  "1280": [131, 107, 107, 107, 107, 107, 107, 107, 152, 152],
+  "2560": [187, 204, 204, 204, 204, 204, 204, 204, 204, 225, 225, 225],
+  "1920": [172, 123, 123, 129, 123, 122, 122, 122, 122, 202, 202, 202],
+  "1440": [151, 109, 109, 115, 109, 109, 109, 109, 109, 180, 180, 180],
+  "1280": [131, 107, 107, 107, 107, 107, 107, 107, 107, 152, 152, 152],
 };
 
 export const columns: Array<ColumnType<IndexerDelegatorsRow>> = [
@@ -222,6 +234,15 @@ export const columns: Array<ColumnType<IndexerDelegatorsRow>> = [
     render: renderFormattedToPercentValue(),
   },
   {
+    title: createTitleWithTooltipDescription(
+      titles.lockedTokens,
+      "Amount of tokens locked in the delegation.",
+    ),
+    dataIndex: "lockedTokens",
+    key: "lockedTokens",
+    render: renderFormattedValue,
+  },
+  {
     title: createTitleWithTooltipDescription(titles.createdAt),
     dataIndex: "createdAt",
     key: "createdAt",
@@ -235,6 +256,16 @@ export const columns: Array<ColumnType<IndexerDelegatorsRow>> = [
     align: "center",
     render: renderDate,
   },
+  {
+    title: createTitleWithTooltipDescription(
+      titles.lockedUntil,
+      "Date or epoch until which tokens are locked.",
+    ),
+    dataIndex: "lockedUntil",
+    key: "lockedUntil",
+    align: "center",
+    render: renderLockedUntil,
+  },
 ];
 
 export const transformToRow = ({
@@ -246,6 +277,8 @@ export const transformToRow = ({
   unstakedTokens,
   createdAt,
   lastUndelegatedAt,
+  lockedUntil,
+  lockedTokens,
   indexer,
 }: IndexerDelegator): IndexerDelegatorsRow => {
   const currentDelegationAmount = divideBy1e18(
@@ -284,6 +317,8 @@ export const transformToRow = ({
         : unrealizedRewards / currentDelegationAmount,
     createdAt,
     lastUndelegatedAt,
+    lockedUntil,
+    lockedTokens: divideBy1e18(lockedTokens),
   };
 };
 
@@ -298,6 +333,8 @@ export const transformToCsvRow = ({
   unreleasedRewardsPercent,
   createdAt,
   lastUndelegatedAt,
+  lockedTokens,
+  lockedUntil,
 }: IndexerDelegatorsRow) => ({
   [titles.delegatorId]: delegatorId,
   [titles.currentDelegationAmount]: currentDelegationAmount,
@@ -307,8 +344,10 @@ export const transformToCsvRow = ({
   [titles.realizedRewards]: realizedRewards,
   [titles.unreleasedReward]: unreleasedReward,
   [titles.unreleasedRewardsPercent]: unreleasedRewardsPercent,
+  [titles.lockedTokens]: lockedTokens,
   [titles.createdAt]: formatTableDate(createdAt),
   [titles.lastUndelegatedAt]: lastUndelegatedAt
     ? formatTableDate(lastUndelegatedAt)
     : null,
+  [titles.lockedUntil]: formatLockedUntil(lockedUntil),
 });

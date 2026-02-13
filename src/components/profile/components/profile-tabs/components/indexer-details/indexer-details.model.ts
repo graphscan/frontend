@@ -6,9 +6,11 @@ import {
 
 export type IndexerDetails = {
   id: string;
+  availableStake: string;
   allocatedTokens: string;
   delegatorIndexingRewards: string;
   delegatorQueryFees: string;
+  delegatedThawingTokens: string;
   geoHash: string | null;
   indexerIndexingRewards: string;
   queryFeesCollected: string;
@@ -19,18 +21,22 @@ export type IndexerDetails = {
   stakedTokens: string;
   lockedTokens: string;
   delegatedTokens: string;
+  delegatedCapacity: string;
 };
 
 export const transform = ({
   indexingRewardCut: _indexingRewardCut,
   queryFeeCut: _queryFeeCut,
   ownStakeRatio: _ownStakeRatio,
+  availableStake: _availableStake,
   allocatedTokens: _allocatedTokens,
   delegatedTokens: _delegatedTokens,
+  delegatedCapacity: _delegatedCapacity,
   stakedTokens: _stakedTokens,
   lockedTokens: _lockedTokens,
   delegatorIndexingRewards,
   delegatorQueryFees,
+  delegatedThawingTokens: _delegatedThawingTokens,
   indexerIndexingRewards,
   queryFeesCollected,
   queryFeeRebates,
@@ -64,17 +70,15 @@ export const transform = ({
     queryFeeEffectiveCut,
     queryFeeCut,
     allocatedTokens,
-    notAllocatedTokens:
-      selfStaked +
-      delegatedTokens +
-      (delegationRemaining < 0 ? delegationRemaining : 0) -
-      allocatedTokens,
+    notAllocatedTokens: divideBy1e18(_availableStake),
     lockedTokens,
     selfStaked,
     delegatedTokens,
+    delegatedCapacity: divideBy1e18(_delegatedCapacity),
     delegationRemaining,
     delegatorIndexingRewards: divideBy1e18(delegatorIndexingRewards),
     delegatorQueryFees: divideBy1e18(delegatorQueryFees),
+    delegatedThawingTokens: divideBy1e18(_delegatedThawingTokens),
     indexerIndexingRewards: divideBy1e18(indexerIndexingRewards),
     queryFeesCollected: divideBy1e18(queryFeesCollected),
     queryFeeRebates: divideBy1e18(queryFeeRebates),

@@ -58,9 +58,11 @@ export const IndexerDetails: React.FC<Props> = ({ id }) => {
     selfStaked,
     lockedTokens,
     delegatedTokens,
+    delegatedCapacity,
     delegationRemaining,
     delegatorIndexingRewards,
     delegatorQueryFees,
+    delegatedThawingTokens,
     indexerIndexingRewards,
     queryFeesCollected,
     queryFeeRebates,
@@ -130,7 +132,7 @@ export const IndexerDetails: React.FC<Props> = ({ id }) => {
               <Th>
                 {createTitleWithTooltipDescription(
                   "NOT Allocated Tokens",
-                  "Not allocated stake",
+                  "Not allocated stake. The value can be negative when the Indexer is still using tokens in allocations that have already been undelegated.",
                 )}
               </Th>
               <Td>
@@ -176,15 +178,12 @@ export const IndexerDetails: React.FC<Props> = ({ id }) => {
               <Th>
                 {createTitleWithTooltipDescription(
                   "Delegation Pool",
-                  `
-                    Stake from Delegators which can be allocated by the Indexer, but cannot be slashed + self 
-                    stake.
-                  `,
+                  "Amount of delegated tokens that can be eligible for rewards.",
                 )}
               </Th>
               <Td>
-                <span data-tip={tooltipNumberContent(delegatedTokens)}>
-                  {formatNumber(delegatedTokens)}
+                <span data-tip={tooltipNumberContent(delegatedCapacity)}>
+                  {formatNumber(delegatedCapacity)}
                 </span>
                 <Postfix> GRT</Postfix>
               </Td>
@@ -247,6 +246,20 @@ export const IndexerDetails: React.FC<Props> = ({ id }) => {
               <Td>
                 <span data-tip={tooltipNumberContent(delegatorQueryFees)}>
                   {formatNumber(delegatorQueryFees)}
+                </span>
+                <Postfix> GRT</Postfix>
+              </Td>
+            </Tr>
+            <Tr>
+              <Th>
+                {createTitleWithTooltipDescription(
+                  "Delegated Thawing Tokens",
+                  "Amount of delegated tokens currently being thawed.",
+                )}
+              </Th>
+              <Td>
+                <span data-tip={tooltipNumberContent(delegatedThawingTokens)}>
+                  {formatNumber(delegatedThawingTokens)}
                 </span>
                 <Postfix> GRT</Postfix>
               </Td>

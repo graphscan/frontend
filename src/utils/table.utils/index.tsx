@@ -38,6 +38,16 @@ export const renderDate = (date: number | null) =>
     </span>
   ) : null;
 
+export const renderLockedUntil = (value: number | null) =>
+  value ? (
+    <span className="ant-table-cell-monospaced-value">
+      {value < 1132 ? `${value} epoch` : formatTableDate(value)}
+    </span>
+  ) : null;
+
+export const formatLockedUntil = (value: number | null): string | null =>
+  value ? (value < 1132 ? `${value} epoch` : formatTableDate(value)) : null;
+
 export const createTitleWithTooltipDescription = (
   title: string,
   description?: string,

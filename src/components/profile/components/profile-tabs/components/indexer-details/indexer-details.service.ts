@@ -17,12 +17,15 @@ export const useIndexerDetails = (id: string) => {
             indexingRewardCut
             queryFeeCut
             ownStakeRatio
+            availableStake
             allocatedTokens
             delegatedTokens
+            delegatedCapacity
             stakedTokens
             lockedTokens
             delegatorIndexingRewards
             delegatorQueryFees
+            delegatedThawingTokens
             indexerIndexingRewards
             queryFeesCollected
             queryFeeRebates

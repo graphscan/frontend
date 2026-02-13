@@ -39,6 +39,8 @@ const indexerDelegatorFragment = gql`
     createdAt
     lastDelegatedAt
     lastUndelegatedAt
+    lockedUntil
+    lockedTokens
     indexer {
       id
       delegatorShares
@@ -83,10 +85,12 @@ export const useIndexerDelegators = ({
       const delegatedStakes = await fetchAllConsecutively(
         createIndexerDelegatorsFetcher(id),
       );
-      return compose(
+      const rows = compose(
         map(transformToRow),
         mergeSplitDelegations,
       )(delegatedStakes);
+
+      return rows;
     },
   );
 

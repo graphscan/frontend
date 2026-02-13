@@ -7,7 +7,9 @@ import {
   renderFormattedValue,
   renderFormattedToPercentValue,
   renderDate,
+  renderLockedUntil,
   formatTableDate,
+  formatLockedUntil,
 } from "../../../../../../utils/table.utils";
 import { calcStakeCurrentDelegation } from "../../../../../../utils/delegators.utils";
 
@@ -116,10 +118,7 @@ export type DelegatorDelegationsRow = {
 };
 
 const titles: Record<
-  Exclude<
-    keyof DelegatorDelegationsRow,
-    "key" | "name" | "lockedTokens" | "lockedUntil"
-  >,
+  Exclude<keyof DelegatorDelegationsRow, "key" | "name">,
   string
 > = {
   id: "Indexer Address",
@@ -132,13 +131,15 @@ const titles: Record<
   unreleasedRewardsPercent: "Unrealized %",
   createdAt: "Delegation Created",
   lastUndelegatedAt: "Last Undelegation",
+  lockedTokens: "Locked Tokens",
+  lockedUntil: "Locked Until",
 };
 
 export const columnsWidth = {
-  "2560": [187, 133, 133, 133, 133, 133, 133, 133, 226, 226, 165, 165, 165],
-  "1920": [167, 115, 115, 115, 130, 115, 115, 115, 202, 200, 148, 148, 148],
-  "1440": [150, 110, 110, 110, 115, 110, 110, 110, 180, 180, 132, 132, 132],
-  "1280": [130, 100, 100, 100, 100, 100, 100, 100, 155, 155, 120, 120, 120],
+  "2560": [187, 133, 133, 133, 133, 133, 133, 133, 133, 226, 226, 226, 165, 165, 165],
+  "1920": [167, 115, 115, 115, 130, 115, 115, 115, 115, 202, 200, 200, 148, 148, 148],
+  "1440": [150, 110, 110, 110, 115, 110, 110, 110, 110, 180, 180, 180, 132, 132, 132],
+  "1280": [130, 100, 100, 100, 100, 100, 100, 100, 100, 155, 155, 155, 120, 120, 120],
 };
 
 export const createDelegatorDelegationsColumns = (): Array<
@@ -217,6 +218,15 @@ export const createDelegatorDelegationsColumns = (): Array<
     render: renderFormattedToPercentValue(),
   },
   {
+    title: createTitleWithTooltipDescription(
+      titles.lockedTokens,
+      "Amount of tokens locked in the delegation.",
+    ),
+    dataIndex: "lockedTokens",
+    key: "lockedTokens",
+    render: renderFormattedValue,
+  },
+  {
     title: createTitleWithTooltipDescription(titles.createdAt),
     dataIndex: "createdAt",
     key: "createdAt",
@@ -229,6 +239,16 @@ export const createDelegatorDelegationsColumns = (): Array<
     key: "lastUndelegatedAt",
     align: "center",
     render: renderDate,
+  },
+  {
+    title: createTitleWithTooltipDescription(
+      titles.lockedUntil,
+      "Date or epoch until which tokens are locked.",
+    ),
+    dataIndex: "lockedUntil",
+    key: "lockedUntil",
+    align: "center",
+    render: renderLockedUntil,
   },
   // {
   //   title: createTitleWithTooltipDescription("Delegate"),
@@ -319,6 +339,8 @@ export const transformToCsvRow = ({
   unreleasedRewardsPercent,
   createdAt,
   lastUndelegatedAt,
+  lockedTokens,
+  lockedUntil,
 }: DelegatorDelegationsRow) => ({
   [titles.id]: name ?? id,
   [titles.currentDelegationAmount]: currentDelegationAmount,
@@ -328,8 +350,10 @@ export const transformToCsvRow = ({
   [titles.realizedRewards]: realizedRewards,
   [titles.unreleasedReward]: unreleasedReward,
   [titles.unreleasedRewardsPercent]: unreleasedRewardsPercent,
+  [titles.lockedTokens]: lockedTokens,
   [titles.createdAt]: formatTableDate(createdAt),
   [titles.lastUndelegatedAt]: lastUndelegatedAt
     ? formatTableDate(lastUndelegatedAt)
     : null,
+  [titles.lockedUntil]: formatLockedUntil(lockedUntil),
 });
