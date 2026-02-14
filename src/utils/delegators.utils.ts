@@ -3,13 +3,33 @@ import {
   DelegatedStakeExtended,
 } from "../model/delegators.model";
 
+type IndexerForExchangeRate = Pick<
+  DelegatedStake["indexer"],
+  "delegatedTokens" | "delegatedThawingTokens" | "delegatorShares"
+>;
+
+/**
+ * Manually calculates delegationExchangeRate because the subgraph value
+ * does not account for thawing tokens.
+ * Formula: (delegatedTokens - delegatedThawingTokens) / delegatorShares
+ */
+export const calcDelegationExchangeRate = (indexer: IndexerForExchangeRate) => {
+  const shares = Number(indexer.delegatorShares);
+  if (shares === 0) return 0;
+  return (
+    (Number(indexer.delegatedTokens) -
+      Number(indexer.delegatedThawingTokens)) /
+    shares
+  );
+};
+
 type CurrentDelegationStake = Pick<DelegatedStake, "shareAmount" | "indexer">;
 
 export const calcStakeCurrentDelegation = ({
   shareAmount,
   indexer,
 }: CurrentDelegationStake) => {
-  return Number(shareAmount) * Number(indexer.delegationExchangeRate);
+  return Number(shareAmount) * calcDelegationExchangeRate(indexer);
 };
 
 export const calcCurrentDelegation = (stakes: Array<CurrentDelegationStake>) =>
@@ -42,7 +62,7 @@ export const calcStakeUnrealizedRewards = ({
   DelegatedStakeExtended,
   "shareAmount" | "personalExchangeRate" | "indexer"
 >) =>
-  (Number(indexer.delegationExchangeRate) - Number(personalExchangeRate)) *
+  (calcDelegationExchangeRate(indexer) - Number(personalExchangeRate)) *
   Number(shareAmount);
 
 export const calcUnrealizedRewards = (

@@ -54,7 +54,7 @@ export const useAccount = (id: string) => {
                   id
                   delegatedTokens
                   delegatorShares
-                  delegationExchangeRate
+                  delegatedThawingTokens
                 }
               }
             }

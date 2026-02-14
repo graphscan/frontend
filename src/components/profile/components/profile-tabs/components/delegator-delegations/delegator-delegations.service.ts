@@ -33,7 +33,7 @@ const delegatorDelegationFragment = gql`
       id
       delegatorShares
       delegatedTokens
-      delegationExchangeRate
+      delegatedThawingTokens
       defaultDisplayName
     }
     shareAmount

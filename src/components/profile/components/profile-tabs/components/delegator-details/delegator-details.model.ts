@@ -18,7 +18,7 @@ type DelegatorDetailsStake = {
     id: string;
     delegatedTokens: string;
     delegatorShares: string;
-    delegationExchangeRate: string;
+    delegatedThawingTokens: string;
   };
 };
 

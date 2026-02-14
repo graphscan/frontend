@@ -8,7 +8,7 @@ export type DelegatedStake = {
     id: string;
     delegatedTokens: string;
     delegatorShares: string;
-    delegationExchangeRate: string;
+    delegatedThawingTokens: string;
   };
 };
 

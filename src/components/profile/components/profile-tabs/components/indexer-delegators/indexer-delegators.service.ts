@@ -45,7 +45,7 @@ const indexerDelegatorFragment = gql`
       id
       delegatorShares
       delegatedTokens
-      delegationExchangeRate
+      delegatedThawingTokens
     }
   }
 `;
