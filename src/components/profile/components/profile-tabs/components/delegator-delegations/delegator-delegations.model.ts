@@ -11,7 +11,10 @@ import {
   formatTableDate,
   formatLockedUntil,
 } from "../../../../../../utils/table.utils";
-import { calcStakeCurrentDelegation } from "../../../../../../utils/delegators.utils";
+import {
+  calcStakeCurrentDelegation,
+  calcDelegationExchangeRate,
+} from "../../../../../../utils/delegators.utils";
 
 export type DelegatorDelegation = {
   id: string;
@@ -19,7 +22,7 @@ export type DelegatorDelegation = {
     id: string;
     delegatorShares: string;
     delegatedTokens: string;
-    delegationExchangeRate: string;
+    delegatedThawingTokens: string;
     defaultDisplayName: string | null;
   };
   shareAmount: string;
@@ -284,16 +287,16 @@ export const transformToRow = ({
   lockedUntil,
   lockedTokens,
 }: DelegatorDelegation): DelegatorDelegationsRow => {
-  const { id, delegatorShares, delegationExchangeRate, defaultDisplayName } =
-    indexer;
+  const { id, delegatorShares, defaultDisplayName } = indexer;
   const currentDelegationAmount = divideBy1e18(
     calcStakeCurrentDelegation({ shareAmount, indexer }),
   );
 
+  const exchangeRate = calcDelegationExchangeRate(indexer);
+
   // Unrealized Rewards = (delegationExchangeRate - personalExchangeRate) * shareAmount
   const unrealizedRewards = divideBy1e18(
-    (Number(delegationExchangeRate) - Number(personalExchangeRate)) *
-      Number(shareAmount),
+    (exchangeRate - Number(personalExchangeRate)) * Number(shareAmount),
   );
 
   const stakedTokensValue = divideBy1e18(stakedTokens);
