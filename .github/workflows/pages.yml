@@ -33,7 +33,7 @@ jobs:
       - name: Build
         env:
           NEXT_PUBLIC_IS_TECHNICAL_WORKS: "false"
-          NEXT_PUBLIC_SUBGRAPH_ANALYTICS_URL: https://gateway.thegraph.com/api/deployments/id/QmQUaTbYyn7E88kBkYYd7WnUXc7Z1DwdVTTQcQQVfV6RFr
+          NEXT_PUBLIC_SUBGRAPH_ANALYTICS_URL: https://gateway.thegraph.com/api/deployments/id/QmauAoX6rLkni9muwR46MhrECmWvVyN3VXjwdErPkBCE54
           NEXT_PUBLIC_SUBGRAPH_MAIN_URL: https://gateway.thegraph.com/api/deployments/id/QmT329Bej8AwSLahmgnmi6fdYkj3rorYAcCes45gDv9aJ4
           NEXT_PUBLIC_WEB3_RPC: https://arbitrum-one-rpc.publicnode.com
           NEXT_PUBLIC_EXPLORER: https://arbiscan.io
