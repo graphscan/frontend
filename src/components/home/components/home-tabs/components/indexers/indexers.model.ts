@@ -26,29 +26,7 @@ import {
   IndexerProvision,
 } from "../../../../../../utils/indexer-capacity.utils";
 
-export type TotalAllocationRaw = {
-  id: string;
-  indexingDelegatorRewards: string;
-  closedAt: number;
-};
-
-export type TotalAllocation = TotalAllocationRaw & {
-  totalDelegatedTokensAtClose: string | null;
-};
-
-export type DailyData = {
-  dayNumber: number;
-  dayStart: string;
-  delegatedTokens: string;
-};
-
-export type TotalAllocationsResponse = {
-  indexer: {
-    id: string;
-    totalAllocations: Array<TotalAllocationRaw>;
-    dailyData: Array<DailyData>;
-  };
-};
+import { HistoricApy } from "../../../../../../utils/historic-apy.utils";
 
 export type IndexerRaw = {
   id: string;
@@ -65,40 +43,10 @@ export type IndexerRaw = {
   legacyIndexingRewardCut: number;
   ownStakeRatio: string;
   allocations: Array<IndexersAllocation>;
-  totalAllocations: Array<TotalAllocationRaw>;
-  dailyData: Array<DailyData>;
 };
 
-export type Indexer = Omit<IndexerRaw, "totalAllocations" | "dailyData"> & {
-  totalAllocations: Array<TotalAllocation>;
-};
-
-/**
- * Maps delegatedTokens from dailyData to totalAllocations.
- * For each allocation, finds the nearest dailyData entry where dayStart >= closedAt.
- */
-export const mapDelegatedTokensToAllocations = (
-  totalAllocations: Array<TotalAllocationRaw>,
-  dailyData: Array<DailyData>,
-): Array<TotalAllocation> => {
-  // Sort dailyData by dayStart ascending for efficient search
-  const sortedDailyData = [...dailyData].sort(
-    (a, b) => Number(a.dayStart) - Number(b.dayStart),
-  );
-
-  return totalAllocations.map((allocation) => {
-    const { closedAt } = allocation;
-
-    // Find the first dailyData entry where dayStart >= closedAt (nearest in ascending order)
-    const matchingDaily = sortedDailyData.find(
-      (daily) => Number(daily.dayStart) >= closedAt,
-    );
-
-    return {
-      ...allocation,
-      totalDelegatedTokensAtClose: matchingDaily?.delegatedTokens ?? null,
-    };
-  });
+export type Indexer = IndexerRaw & {
+  historicApy: HistoricApy | null;
 };
 
 export type IndexersRow = {
@@ -111,7 +59,8 @@ export type IndexersRow = {
   delegationPool: number;
   allocatedTokens: number;
   delegationRemaining: number | null;
-  historicApy: number;
+  historicApy: number | null;
+  historicApyHistory: HistoricApy | null;
   estFuturePercentReward: number | null;
   allocationsEffectiveness: number | null;
   indexingRewardEffectiveCut: number | null;
@@ -127,8 +76,6 @@ export type IndexersRow = {
   >;
 };
 
-export const PLANNED_PERIOD_DAYS = 60;
-
 const titles: Record<
   Exclude<
     keyof IndexersRow,
@@ -140,6 +87,7 @@ const titles: Record<
     | "favourite"
     | "networkStats"
     | "allocations"
+    | "historicApyHistory"
   >,
   string
 > = {
@@ -167,7 +115,7 @@ export const createColumns = ({
   renderHistoricApy,
 }: {
   renderIndexerId: (value: string, row: IndexersRow) => React.ReactElement;
-  renderHistoricApy: (_: number, row: IndexersRow) => React.ReactElement;
+  renderHistoricApy: (_: number | null, row: IndexersRow) => React.ReactElement;
 }): Array<ColumnType<IndexersRow>> => [
   {
     title: createTitleWithTooltipDescription(
@@ -251,7 +199,10 @@ export const createColumns = ({
     title: createTitleWithTooltipDescription(
       titles.historicApy,
       `
-        Rewards rate of indexer based on period of the last 60 days and extrapolated to a year.
+        Annual compounded return of an active delegation share over the last 60 completed UTC days.
+        Includes reinvested indexing rewards (including collect on open allocations) and query fees.
+        Thawing tokens are excluded. This is historical performance, not a forecast.
+        A dash means comparable pool history is unavailable.
       `,
     ),
     dataIndex: "historicApy",
@@ -290,38 +241,6 @@ export const createColumns = ({
   },
 ];
 
-export const getHistoricApy = (
-  totalAllocations: Array<TotalAllocation>,
-  periodDays: number,
-) =>
-  divide(
-    subtract(
-      totalAllocations.reduce((acc, val) => {
-        if (
-          val.totalDelegatedTokensAtClose &&
-          val.totalDelegatedTokensAtClose !== "0"
-        ) {
-          const wi = divide(
-            Number(val.indexingDelegatorRewards),
-            subtract(
-              Number(val.totalDelegatedTokensAtClose),
-              Number(val.indexingDelegatorRewards),
-            ),
-          );
-          acc *= 1 + wi;
-        }
-
-        return acc;
-      }, 1),
-      1,
-    ),
-    periodDays,
-  );
-
-export const getHistoricApyPeriod = (plannedPeriod: number) => {
-  return Math.floor(Date.now() / 1000) - plannedPeriod * 86400;
-};
-
 export const transformToRows =
   ({ favourites }: { favourites: Map<string, number> }) =>
   ({
@@ -353,7 +272,7 @@ export const transformToRows =
       ownStakeRatio: _ownStakeRatio,
       allocations,
       provisions,
-      totalAllocations,
+      historicApy,
     }: Indexer): IndexersRow => {
       const delegationPool = divideBy1e18(delegatedTokens);
       const activeDelegationPool = Math.max(
@@ -428,7 +347,8 @@ export const transformToRows =
         delegationPool,
         allocatedTokens,
         delegationRemaining,
-        historicApy: getHistoricApy(totalAllocations, PLANNED_PERIOD_DAYS),
+        historicApy: historicApy?.periods[60] ?? null,
+        historicApyHistory: historicApy ?? null,
         estFuturePercentReward,
         allocationsEffectiveness:
           denominator === null
@@ -483,7 +403,8 @@ export const transformToCsvRow = ({
   [titles.delegationPool]: delegationPool,
   [titles.allocatedTokens]: `${allocatedTokens} (${formatNumberToPercent(allocationRate)})`,
   [titles.delegationRemaining]: delegationRemaining,
-  [titles.historicApy]: historicApy,
+  [titles.historicApy]:
+    historicApy === null ? null : formatNumberToPercent(historicApy),
   [titles.estFuturePercentReward]:
     estFuturePercentReward === null
       ? null

@@ -157,7 +157,7 @@ test("the dashboard excludes thawing GRT and CSV exports its annualized APR", ()
     legacyIndexingRewardCut: 500000,
     ownStakeRatio: "0.5",
     allocations: [allocation],
-    totalAllocations: [],
+    historicApy: null,
   };
   const rows = (
     i,
@@ -202,7 +202,7 @@ test("the dashboard excludes thawing GRT and CSV exports its annualized APR", ()
   );
 });
 
-test("current allocations paginate beyond 1000 on MAIN; history remains on ANALYTICS", async () => {
+test("current allocations paginate beyond 1000 on MAIN independently of historical APY", async () => {
   const queries = [];
   const mainCalls = [];
   const historyCalls = [];
@@ -228,6 +228,12 @@ test("current allocations paginate beyond 1000 on MAIN; history remains on ANALY
     "../../../../../../services/network-stats.service": {
       useNetworkStats: () => ({ data: { indexerCount: 1 } }),
     },
+    "../../../../../../services/historic-apy.service": {
+      fetchIndexerHistoricApys: async () => {
+        historyCalls.push("history");
+        return [];
+      },
+    },
     "../../../../../../services/graphql.service": {
       ...graph,
       request: async (query) => {
@@ -239,19 +245,13 @@ test("current allocations paginate beyond 1000 on MAIN; history remains on ANALY
               _meta: { block: { number: 42 } },
             };
       },
-      requestAnalytics: async (query) => {
-        historyCalls.push(query);
-        return {
-          indexers: [{ id: "indexer", totalAllocations: [], dailyData: [] }],
-        };
-      },
     },
   });
   loader(
     "src/components/home/components/home-tabs/components/indexers/indexers.service.ts",
   ).useIndexers();
   const current = queries.find((q) => q.key[0] === "indexers-current");
-  const history = queries.find((q) => q.key[0] === "indexers-history");
+  const history = queries.find((q) => q.key[0] === "indexers-historic-apy");
   const results = await current.fn();
   assert.equal(results[0].allocations.length, 1001);
   assert.equal(results[0].allocations[1000].id, "1000");
@@ -269,7 +269,7 @@ test("a refreshed network rate reaches the table without refetching historical d
   let networkData = { indexerCount: 1, ...params.networkStats };
   let networkError = null;
   const currentData = [{ id: "indexer", allocations: [] }];
-  const historyData = [{ id: "indexer", totalAllocations: [] }];
+  const historyData = [{ id: "indexer", historicApy: null }];
   const loader = createLoader({
     react: { useMemo: (fn) => fn() },
     "@tanstack/react-query": {

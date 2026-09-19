@@ -20,11 +20,9 @@ import { downloadCsv } from "../../../../../../utils/csv.utils";
 import { useFavouriteColumn } from "../../../../../../utils/favourite-column.utils";
 import { ColumnType } from "antd/es/table";
 
-const renderHistoricApy = (_: number, row: IndexersRow) => {
-  const { historicApy, id } = row;
-
-  return <HistoricApyContent indexerId={id} value={historicApy} />;
-};
+const renderHistoricApy = (_: number | null, row: IndexersRow) => (
+  <HistoricApyContent history={row.historicApyHistory} />
+);
 
 const renderIndexerId = (id: string, row: IndexersRow) => {
   return <IdContent indexerId={id} row={row} />;

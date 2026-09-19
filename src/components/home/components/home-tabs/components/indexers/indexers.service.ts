@@ -1,19 +1,11 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { gql } from "graphql-request";
-import {
-  Indexer,
-  IndexerRaw,
-  PLANNED_PERIOD_DAYS,
-  TotalAllocationsResponse,
-  getHistoricApyPeriod,
-  mapDelegatedTokensToAllocations,
-} from "./indexers.model";
+import { Indexer, IndexerRaw } from "./indexers.model";
 import {
   fetchAllConsecutively,
   fetchAllParallel,
   request,
-  requestAnalytics,
   REQUEST_LIMIT,
 } from "../../../../../../services/graphql.service";
 import { useNetworkStats } from "../../../../../../services/network-stats.service";
@@ -27,8 +19,9 @@ import {
   HISTORY_QUERY_OPTIONS,
 } from "../../../../../../services/query-policy";
 
-type CurrentIndexer = Omit<IndexerRaw, "dailyData" | "totalAllocations">;
-type IndexerHistory = Pick<IndexerRaw, "id" | "dailyData" | "totalAllocations">;
+import { fetchIndexerHistoricApys } from "../../../../../../services/historic-apy.service";
+
+type CurrentIndexer = IndexerRaw;
 
 export const currentAllocationFragment = gql`
   fragment CurrentAllocationFragment on Allocation {
@@ -46,14 +39,6 @@ export const currentAllocationFragment = gql`
     }
   }
 `;
-export const totalAllocationFragment = gql`
-  fragment TotalAllocationFragment on Allocation {
-    id
-    indexingDelegatorRewards
-    closedAt
-  }
-`;
-
 const fetchCurrentIndexers = async (skip: number) => {
   const { indexers, _meta } = await request<{
     indexers: CurrentIndexer[];
@@ -107,54 +92,6 @@ const fetchCurrentIndexers = async (skip: number) => {
   );
 };
 
-const fetchIndexerHistory = async (skip: number) => {
-  const { indexers } = await requestAnalytics<{
-    indexers: IndexerHistory[];
-  }>(gql`
-    ${totalAllocationFragment}
-    query {
-      indexers(first: ${REQUEST_LIMIT}, skip: ${skip}, orderBy: id, orderDirection: asc) {
-        id
-        totalAllocations(first: ${REQUEST_LIMIT}, orderBy: id, orderDirection: asc, where: { status_not: Active, closedAt_gte: ${getHistoricApyPeriod(PLANNED_PERIOD_DAYS)} }) {
-          ...TotalAllocationFragment
-        }
-        dailyData(first: ${PLANNED_PERIOD_DAYS}, orderBy: dayNumber, orderDirection: desc, where: { dayStart_gte: ${getHistoricApyPeriod(PLANNED_PERIOD_DAYS)} }) {
-          dayNumber dayStart delegatedTokens
-        }
-      }
-    }
-  `);
-  return Promise.all(
-    indexers.map(async (indexer) => {
-      const totalAllocations =
-        indexer.totalAllocations.length < REQUEST_LIMIT
-          ? indexer.totalAllocations
-          : await fetchAllConsecutively(async (skip) => {
-              const response =
-                await requestAnalytics<TotalAllocationsResponse>(gql`
-            ${totalAllocationFragment}
-            query {
-              indexer(id: ${JSON.stringify(indexer.id)}) {
-                id
-                totalAllocations(first: ${REQUEST_LIMIT}, skip: ${skip}, orderBy: id, orderDirection: asc, where: { status_not: Active, closedAt_gte: ${getHistoricApyPeriod(PLANNED_PERIOD_DAYS)} }) {
-                  ...TotalAllocationFragment
-                }
-              }
-            }
-          `);
-              return response.indexer.totalAllocations;
-            }, indexer.totalAllocations);
-      return {
-        id: indexer.id,
-        totalAllocations: mapDelegatedTokensToAllocations(
-          totalAllocations,
-          indexer.dailyData,
-        ),
-      };
-    }),
-  );
-};
-
 export const useIndexers = () => {
   const network = useNetworkStats();
   const rewards = useRewardParameters(network.data);
@@ -168,8 +105,8 @@ export const useIndexers = () => {
     },
   );
   const history = useQuery(
-    ["indexers-history", network.data?.indexerCount],
-    () => fetchAllParallel(network.data!.indexerCount, fetchIndexerHistory),
+    ["indexers-historic-apy"],
+    fetchIndexerHistoricApys,
     {
       ...HISTORY_QUERY_OPTIONS,
       enabled: Boolean(network.data),
@@ -178,27 +115,35 @@ export const useIndexers = () => {
   );
   // Derive from live inputs instead of caching a closed-over network snapshot.
   const data = useMemo(() => {
-    if (!network.data || !current.data || !history.data) return undefined;
+    if (!network.data || !current.data) return undefined;
     const histories = new Map(
-      history.data.map((indexer) => [indexer.id, indexer.totalAllocations]),
+      history.data?.map((indexer) => [indexer.id, indexer.historicApy]),
     );
     return {
       indexers: current.data.map(
         (indexer): Indexer => ({
           ...indexer,
-          totalAllocations: histories.get(indexer.id) ?? [],
+          historicApy: history.error
+            ? null
+            : (histories.get(indexer.id) ?? null),
         }),
       ),
       networkStats: network.data,
       rewardParameters: rewards.error ? null : (rewards.data ?? null),
     };
-  }, [network.data, current.data, history.data, rewards.data, rewards.error]);
-  const error = network.error || current.error || history.error;
+  }, [
+    network.data,
+    current.data,
+    history.data,
+    history.error,
+    rewards.data,
+    rewards.error,
+  ]);
+  const error = network.error || current.error;
   return {
     data,
     error,
-    isLoading:
-      !error && (network.isLoading || current.isLoading || history.isLoading),
+    isLoading: !error && (network.isLoading || current.isLoading),
     isRefetching:
       network.isRefetching || current.isRefetching || history.isRefetching,
   };

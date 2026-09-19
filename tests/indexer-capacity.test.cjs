@@ -120,7 +120,7 @@ test("dashboard and CSV use the same capacity as the profile; unavailable metric
   const rowFor = (provisions) =>
     transformToRows({ favourites: new Map() })({
       indexers: [
-        { ...ryabina, provisions, allocations: [], totalAllocations: [] },
+        { ...ryabina, provisions, allocations: [], historicApy: null },
       ],
       rewardParameters: null,
       networkStats: {
