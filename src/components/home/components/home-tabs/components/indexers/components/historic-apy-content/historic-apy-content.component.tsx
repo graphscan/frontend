@@ -23,18 +23,6 @@ export const HistoricApyContent: React.FC<{ history: HistoricApy | null }> = ({
               </p>
             );
           })}
-          {history && (
-            <p>
-              Completed UTC days, ending before{" "}
-              {new Date(history.endTimestamp * 1000).toISOString().slice(0, 10)}
-              .
-            </p>
-          )}
-          <p>
-            Includes reinvested indexing rewards and query fees; excludes
-            thawing tokens.
-          </p>
-          <p>A dash means comparable pool history is unavailable.</p>
         </article>,
       )}
     >

@@ -13,7 +13,7 @@ This is **APY**, not the previous linear annualization and not a forecast. The s
 
 ## Snapshot boundaries and availability
 
-Daily snapshots are updated by events, not necessarily every calendar day. The endpoint is midnight UTC at the start of the latest indexed day. For each boundary, use the most recent snapshot whose `dayEnd` is at or before the boundary, carrying it forward through event-free days. Never use a snapshot after the boundary. Today's incomplete data is excluded; the tooltip shows the exclusive end date. The exponent uses the requested calendar period, not the distance between event-driven snapshot dates.
+Daily snapshots are updated by events, not necessarily every calendar day. The endpoint is midnight UTC at the start of the latest indexed day. For each boundary, use the most recent snapshot whose `dayEnd` is at or before the boundary, carrying it forward through event-free days. Never use a snapshot after the boundary. Today's incomplete data is excluded. The tooltip contains only the four period values; methodology is described in the column heading and this document. The exponent uses the requested calendar period, not the distance between event-driven snapshot dates.
 
 Metadata, all pages, boundary rates and pool checks use one ANALYTICS block. Five boundary snapshots (end, 30, 60, 180, 360 days ago) and the latest empty-pool snapshot serve every displayed period. At 189 indexers this takes two requests (metadata plus one page), with no allocation downloads or additional hover requests. History refreshes every 30 minutes.
 
