@@ -118,7 +118,7 @@ class TableStorageManager<Row> {
 
   getStoragePerPage = () => {
     const perPage =
-      typeof localStorage !== "undefined"
+      typeof window !== "undefined"
         ? Number(
             localStorage.getItem(
               `${this.perPageKey}${this.id ? `-${this.id}` : ""}`,
@@ -131,7 +131,7 @@ class TableStorageManager<Row> {
 
   getStorageCurrentPage = () => {
     const currentPage =
-      typeof localStorage !== "undefined"
+      typeof window !== "undefined"
         ? Number(
             localStorage.getItem(
               `${this.currentPageKey}${this.id ? `-${this.id}` : ""}`,
@@ -144,7 +144,7 @@ class TableStorageManager<Row> {
 
   getStorageSortParams = (): SortParams<Row> | null => {
     const sortValue =
-      typeof localStorage !== "undefined"
+      typeof window !== "undefined"
         ? localStorage.getItem(`${this.sortKey}${this.id ? `-${this.id}` : ""}`)
         : null;
     try {

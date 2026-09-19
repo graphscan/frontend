@@ -1,4 +1,14 @@
-export type DelegatedStake = {
+export type DelegationPool = {
+  delegatorShares: string;
+  delegationExchangeRate: string;
+};
+
+export type DelegationPoolSource = {
+  provision: (DelegationPool & { id: string }) | null;
+  indexer: DelegationPool;
+};
+
+export type DelegatedStake = DelegationPoolSource & {
   id: string;
   shareAmount: string;
   stakedTokens: string;

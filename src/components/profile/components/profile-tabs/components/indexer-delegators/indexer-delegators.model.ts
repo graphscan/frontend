@@ -1,3 +1,5 @@
+import { DelegationPoolSource } from "../../../../../../model/delegators.model";
+import { formatLockedUntil } from "../../../../../../utils/delegation-lock.utils";
 import { ColumnType } from "antd/es/table";
 import { divideBy1e18 } from "../../../../../../utils/number.utils";
 import {
@@ -9,14 +11,14 @@ import {
   renderDate,
   renderLockedUntil,
   formatTableDate,
-  formatLockedUntil,
 } from "../../../../../../utils/table.utils";
 import {
   calcStakeCurrentDelegation,
-  calcDelegationExchangeRate,
+  calcStakeUnrealizedRewards,
 } from "../../../../../../utils/delegators.utils";
 
-export type IndexerDelegator = {
+export type IndexerDelegator = DelegationPoolSource & {
+  isLegacy: boolean;
   id: string;
   delegator: {
     id: string;
@@ -38,89 +40,8 @@ export type IndexerDelegator = {
   };
 };
 
-/**
- * Gets the base delegation ID (delegator-indexer) without data service suffix.
- * Old format: {delegator}-{indexer}
- * New format: {delegator}-{indexer}-{dataService}
- */
-const getBaseDelegationId = (id: string): string => {
-  const parts = id.split("-");
-  // If ID has 3 parts (with data service), return first two parts
-  // If ID has 2 parts (old format), return as is
-  return parts.length > 2 ? `${parts[0]}-${parts[1]}` : id;
-};
-
-/**
- * Merges related delegatedStake entities that were split due to protocol upgrade.
- * Entities with same delegator-indexer base ID but different data service suffix
- * should be merged into one.
- */
-export const mergeSplitDelegations = (
-  delegations: Array<IndexerDelegator>,
-): Array<IndexerDelegator> => {
-  const groupedByBase = new Map<string, Array<IndexerDelegator>>();
-
-  // Group by base ID (delegator-indexer)
-  for (const delegation of delegations) {
-    const baseId = getBaseDelegationId(delegation.id);
-    const group = groupedByBase.get(baseId) || [];
-    group.push(delegation);
-    groupedByBase.set(baseId, group);
-  }
-
-  const result: Array<IndexerDelegator> = [];
-
-  groupedByBase.forEach((group, baseId) => {
-    if (group.length === 1) {
-      // No merge needed
-      result.push(group[0]);
-    } else {
-      // Merge multiple entities
-      // Find the "primary" entity (positive shareAmount or the shorter ID)
-      const primary =
-        group.find((d) => Number(d.shareAmount) > 0) ||
-        group.find((d) => d.id === baseId) ||
-        group[0];
-
-      const merged: IndexerDelegator = {
-        id: baseId,
-        delegator: primary.delegator,
-        indexer: primary.indexer,
-        // Sum numeric values
-        shareAmount: group
-          .reduce((sum, d) => sum + Number(d.shareAmount), 0)
-          .toString(),
-        stakedTokens: group
-          .reduce((sum, d) => sum + Number(d.stakedTokens), 0)
-          .toString(),
-        unstakedTokens: group
-          .reduce((sum, d) => sum + Number(d.unstakedTokens), 0)
-          .toString(),
-        // Take earliest createdAt
-        createdAt: Math.min(...group.map((d) => d.createdAt)),
-        // Take non-null dates
-        lastDelegatedAt:
-          group.find((d) => d.lastDelegatedAt !== null)?.lastDelegatedAt ??
-          null,
-        lastUndelegatedAt:
-          group.find((d) => d.lastUndelegatedAt !== null)?.lastUndelegatedAt ??
-          null,
-        lockedUntil: Math.max(...group.map((d) => d.lockedUntil)),
-        lockedTokens: group
-          .reduce((sum, d) => sum + Number(d.lockedTokens), 0)
-          .toString(),
-        // Take personalExchangeRate from entity with positive shareAmount (real rate, not "1")
-        personalExchangeRate: primary.personalExchangeRate,
-      };
-
-      result.push(merged);
-    }
-  });
-
-  return result;
-};
-
 export type IndexerDelegatorsRow = {
+  isLegacy: boolean;
   id: string;
   delegatorId: string;
   key: string;
@@ -138,7 +59,7 @@ export type IndexerDelegatorsRow = {
 };
 
 const titles: Record<
-  Exclude<keyof IndexerDelegatorsRow, "key" | "id">,
+  Exclude<keyof IndexerDelegatorsRow, "key" | "id" | "isLegacy">,
   string
 > = {
   delegatorId: "Delegator Address",
@@ -176,7 +97,7 @@ export const columns: Array<ColumnType<IndexerDelegatorsRow>> = [
   {
     title: createTitleWithTooltipDescription(
       titles.currentDelegationAmount,
-      "Size of delegation from the chosen Delegator to the chosen Indexer.",
+      "Active delegated tokens, including accumulated rewards. Excludes thawing funds. The sum matches Active Delegation Pool in the profile at the same snapshot.",
     ),
     dataIndex: "currentDelegationAmount",
     key: "currentDelegationAmount",
@@ -272,6 +193,8 @@ export const columns: Array<ColumnType<IndexerDelegatorsRow>> = [
 ];
 
 export const transformToRow = ({
+  isLegacy,
+  provision,
   id,
   delegator: { id: delegatorId },
   shareAmount,
@@ -285,13 +208,17 @@ export const transformToRow = ({
   indexer,
 }: IndexerDelegator): IndexerDelegatorsRow => {
   const currentDelegationAmount = divideBy1e18(
-    calcStakeCurrentDelegation({ shareAmount, indexer }),
+    calcStakeCurrentDelegation({ shareAmount, indexer, provision }),
   );
 
   // Unrealized Rewards = (delegationExchangeRate - personalExchangeRate) * shareAmount
   const unrealizedRewards = divideBy1e18(
-    (calcDelegationExchangeRate(indexer) - Number(personalExchangeRate)) *
-      Number(shareAmount),
+    calcStakeUnrealizedRewards({
+      shareAmount,
+      personalExchangeRate,
+      indexer,
+      provision,
+    }),
   );
 
   const stakedTokensValue = divideBy1e18(stakedTokens);
@@ -308,6 +235,7 @@ export const transformToRow = ({
     id,
     delegatorId,
     key: id,
+    isLegacy,
     currentDelegationAmount,
     stakedTokens: stakedTokensValue,
     unstakedTokens: unstakedTokensValue,
@@ -326,6 +254,7 @@ export const transformToRow = ({
 };
 
 export const transformToCsvRow = ({
+  isLegacy,
   delegatorId,
   currentDelegationAmount,
   stakedTokens,
@@ -352,5 +281,5 @@ export const transformToCsvRow = ({
   [titles.lastUndelegatedAt]: lastUndelegatedAt
     ? formatTableDate(lastUndelegatedAt)
     : null,
-  [titles.lockedUntil]: formatLockedUntil(lockedUntil),
+  [titles.lockedUntil]: formatLockedUntil(lockedUntil, isLegacy),
 });

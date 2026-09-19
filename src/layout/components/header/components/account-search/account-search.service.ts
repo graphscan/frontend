@@ -6,29 +6,6 @@ import { request } from "../../../../../services/graphql.service";
 import { isTermLongEnough } from "../../../../../utils/account-search.utils";
 import { useDebounce } from "../../../../../utils/debounce.utils";
 
-type AccountSearchResponse = {
-  accountSearch: Array<Account>;
-};
-
-const getAccounts = async (searchTerm: string) => {
-  const { accountSearch } = await request<AccountSearchResponse>(gql`
-    query {
-      accountSearch(
-        text: "${searchTerm}:* | 0x${searchTerm}:*",
-        first: 10
-      ) {
-        id
-        defaultDisplayName
-        tokenLockWallets {
-          id
-        }
-      }
-    }
-  `);
-
-  return accountSearch;
-};
-
 type AccountSearchResponseLite = Record<
   "accounts" | "indexers" | "delegators" | "curators",
   Array<Account>
@@ -97,19 +74,13 @@ const getAccountsLite = async (searchTerm: string, first = 5) => {
     ...curators,
   ]);
 };
-// use main subgraph search string by defaul
-export const useAccountsSearch = (
-  searchTerm: string,
-  useSearchByEntity: boolean = true,
-) => {
+export const useAccountsSearch = (searchTerm: string) => {
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   return useQuery(
     ["accounts-search", debouncedSearchTerm],
     async () => {
-      const accounts = await (useSearchByEntity
-        ? getAccountsLite(debouncedSearchTerm)
-        : getAccounts(debouncedSearchTerm));
+      const accounts = await getAccountsLite(debouncedSearchTerm);
 
       return accounts;
     },

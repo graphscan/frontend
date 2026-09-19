@@ -28,13 +28,16 @@ jobs:
           cache: "yarn"
 
       - name: Install dependencies
-        run: yarn install
+        run: yarn install --frozen-lockfile
+
+      - name: Test
+        run: yarn test
 
       - name: Build
         env:
           NEXT_PUBLIC_IS_TECHNICAL_WORKS: "false"
-          NEXT_PUBLIC_SUBGRAPH_ANALYTICS_URL: https://gateway.thegraph.com/api/deployments/id/QmauAoX6rLkni9muwR46MhrECmWvVyN3VXjwdErPkBCE54
-          NEXT_PUBLIC_SUBGRAPH_MAIN_URL: https://gateway.thegraph.com/api/deployments/id/QmT329Bej8AwSLahmgnmi6fdYkj3rorYAcCes45gDv9aJ4
+          NEXT_PUBLIC_SUBGRAPH_ANALYTICS_URL: https://gateway.thegraph.com/api/subgraphs/id/AgV4u2z1BFZKSj4Go1AdQswUGW2FcAtnPhifd4V7NLVz
+          NEXT_PUBLIC_SUBGRAPH_MAIN_URL: https://gateway.thegraph.com/api/subgraphs/id/DZz4kDTdmzWLWsV373w2bSmoar3umKKH9y82SUKr5qmp
           NEXT_PUBLIC_WEB3_RPC: https://arbitrum-one-rpc.publicnode.com
           NEXT_PUBLIC_EXPLORER: https://arbiscan.io
           NEXT_PUBLIC_THEGRAPH_EXPLORER: https://thegraph.com

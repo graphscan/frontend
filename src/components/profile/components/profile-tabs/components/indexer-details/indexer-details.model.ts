@@ -1,16 +1,20 @@
 import { decodeGeohash } from "../../../../../../utils/geohash.utils";
 import {
+  getIndexerCapacity,
+  IndexerProvision,
+} from "../../../../../../utils/indexer-capacity.utils";
+import {
   divideBy1e18,
   divideBy1e6,
 } from "../../../../../../utils/number.utils";
 
 export type IndexerDetails = {
   id: string;
-  availableStake: string;
   allocatedTokens: string;
+  legacyAllocatedTokens: string;
+  provisions: IndexerProvision[];
   delegatorIndexingRewards: string;
   delegatorQueryFees: string;
-  delegatedThawingTokens: string;
   geoHash: string | null;
   indexerIndexingRewards: string;
   queryFeesCollected: string;
@@ -21,22 +25,22 @@ export type IndexerDetails = {
   stakedTokens: string;
   lockedTokens: string;
   delegatedTokens: string;
-  delegatedCapacity: string;
+  delegatedThawingTokens: string;
 };
 
 export const transform = ({
   indexingRewardCut: _indexingRewardCut,
   queryFeeCut: _queryFeeCut,
   ownStakeRatio: _ownStakeRatio,
-  availableStake: _availableStake,
   allocatedTokens: _allocatedTokens,
+  legacyAllocatedTokens,
+  provisions,
   delegatedTokens: _delegatedTokens,
-  delegatedCapacity: _delegatedCapacity,
+  delegatedThawingTokens: _delegatedThawingTokens,
   stakedTokens: _stakedTokens,
   lockedTokens: _lockedTokens,
   delegatorIndexingRewards,
   delegatorQueryFees,
-  delegatedThawingTokens: _delegatedThawingTokens,
   indexerIndexingRewards,
   queryFeesCollected,
   queryFeeRebates,
@@ -46,7 +50,8 @@ export const transform = ({
   const lockedTokens = divideBy1e18(_lockedTokens);
   const selfStaked = stackedTokens - lockedTokens;
   const delegatedTokens = divideBy1e18(_delegatedTokens);
-  const delegationRemaining = selfStaked * 16 - delegatedTokens;
+  const delegatedThawingTokens = divideBy1e18(_delegatedThawingTokens);
+  const activeDelegatedTokens = delegatedTokens - delegatedThawingTokens;
   const allocatedTokens = divideBy1e18(_allocatedTokens);
 
   const indexingRewardCut = divideBy1e6(_indexingRewardCut);
@@ -70,15 +75,15 @@ export const transform = ({
     queryFeeEffectiveCut,
     queryFeeCut,
     allocatedTokens,
-    notAllocatedTokens: divideBy1e18(_availableStake),
+    legacyAllocatedTokens: divideBy1e18(legacyAllocatedTokens),
+    ...getIndexerCapacity(provisions),
     lockedTokens,
     selfStaked,
     delegatedTokens,
-    delegatedCapacity: divideBy1e18(_delegatedCapacity),
-    delegationRemaining,
+    activeDelegatedTokens,
+    delegatedThawingTokens,
     delegatorIndexingRewards: divideBy1e18(delegatorIndexingRewards),
     delegatorQueryFees: divideBy1e18(delegatorQueryFees),
-    delegatedThawingTokens: divideBy1e18(_delegatedThawingTokens),
     indexerIndexingRewards: divideBy1e18(indexerIndexingRewards),
     queryFeesCollected: divideBy1e18(queryFeesCollected),
     queryFeeRebates: divideBy1e18(queryFeeRebates),

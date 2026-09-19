@@ -5,6 +5,7 @@ import {
   IndexersAllocation,
 } from "../../../../../../model/indexers.model";
 import { NetworkStats } from "../../../../../../model/network-stats.model";
+import { RewardParameters } from "../../../../../../services/reward-parameters.service";
 import {
   createTitleWithTooltipDescription,
   renderFormattedValue,
@@ -20,6 +21,10 @@ import {
   divideBy1e6,
 } from "../../../../../../utils/number.utils";
 import { calculateSubgraphProportion } from "../../../../../../utils/subgraph.utils";
+import {
+  getIndexerCapacity,
+  IndexerProvision,
+} from "../../../../../../utils/indexer-capacity.utils";
 
 export type TotalAllocationRaw = {
   id: string;
@@ -52,9 +57,12 @@ export type IndexerRaw = {
   stakedTokens: string;
   lockedTokens: string;
   delegatedTokens: string;
+  delegatedThawingTokens: string;
   allocatedTokens: string;
+  provisions: IndexerProvision[];
   queryFeeCut: number;
   indexingRewardCut: number;
+  legacyIndexingRewardCut: number;
   ownStakeRatio: string;
   allocations: Array<IndexersAllocation>;
   totalAllocations: Array<TotalAllocationRaw>;
@@ -102,10 +110,10 @@ export type IndexersRow = {
   selfStaked: number;
   delegationPool: number;
   allocatedTokens: number;
-  delegationRemaining: number;
+  delegationRemaining: number | null;
   historicApy: number;
-  estFuturePercentReward: number;
-  allocationsEffectiveness: number;
+  estFuturePercentReward: number | null;
+  allocationsEffectiveness: number | null;
   indexingRewardEffectiveCut: number | null;
   queryFeeEffectiveCut: number | null;
   allocationRate: number;
@@ -214,7 +222,7 @@ export const createColumns = ({
   {
     title: createTitleWithTooltipDescription(
       titles.delegationPool,
-      "Stake from Delegators which can be allocated by the Indexer, but cannot be slashed.",
+      "Total delegated tokens, including tokens thawing for withdrawal. The indexer profile shows the active and thawing portions separately. Excludes the indexer's own stake.",
     ),
     dataIndex: "delegationPool",
     key: "delegationPool",
@@ -232,11 +240,12 @@ export const createColumns = ({
   {
     title: createTitleWithTooltipDescription(
       titles.delegationRemaining,
-      "Amount of GRT that can be delegated to Indexer  without exceeding Indexer’s max capacity.",
+      "Combined delegation headroom across services, based on active provisioned self stake and each service's ratio. Excludes thawing funds. Service limits apply independently; a dash means parameters are unavailable.",
     ),
     dataIndex: "delegationRemaining",
     key: "delegationRemaining",
-    render: renderFormattedRealValue,
+    render: (value: number | null) =>
+      value === null ? "—" : renderFormattedRealValue(value),
   },
   {
     title: createTitleWithTooltipDescription(
@@ -253,24 +262,31 @@ export const createColumns = ({
     title: createTitleWithTooltipDescription(
       titles.estFuturePercentReward,
       `
-        This is the approximate Annual Percentage Rate (APR) that delegators currently receive, considering 
-        the current ratio of self-stake to the delegate pool, and taking into account active allocations.
+        Estimated annual indexing rewards per active delegated GRT, using the current issuance rate,
+        active allocations and each pool's reward cut. Tokens thawing for withdrawal are excluded.
+        This is an average across the indexer's delegation pools; individual pools can earn different rates.
+        It assumes successful reward claims; eligibility and proof-of-indexing conditions can reduce actual rewards.
+        A dash means current on-chain reward parameters are unavailable.
       `,
     ),
     dataIndex: "estFuturePercentReward",
     key: "estFuturePercentReward",
-    render: renderFormattedToPercentOfYearValue,
+    render: (value: number | null) =>
+      value === null ? "—" : renderFormattedToPercentOfYearValue(value),
   },
   {
     title: createTitleWithTooltipDescription(
       titles.allocationsEffectiveness,
       `
-        The average of the rewards proportions for all active allocations of the indexer.
+        The average of the rewards proportions for all active allocations of the indexer,
+        including available allocation capacity. Thawing funds are excluded.
+        A dash means service capacity parameters are unavailable.
       `,
     ),
     dataIndex: "allocationsEffectiveness",
     key: "allocationsEffectiveness",
-    render: renderFixedValue(3),
+    render: (value: number | null) =>
+      value === null ? "—" : renderFixedValue(3)(value),
   },
 ];
 
@@ -310,6 +326,7 @@ export const transformToRows =
   ({ favourites }: { favourites: Map<string, number> }) =>
   ({
     indexers,
+    rewardParameters,
     networkStats: {
       networkGRTIssuancePerBlock,
       totalTokensAllocated,
@@ -319,6 +336,7 @@ export const transformToRows =
   }: {
     indexers: Array<Indexer>;
     networkStats: NetworkStats;
+    rewardParameters: RewardParameters | null;
   }): Array<IndexersRow> => {
     const transformToRow = ({
       id,
@@ -327,14 +345,21 @@ export const transformToRows =
       stakedTokens: _stakedTokens,
       lockedTokens: _lockedTokens,
       delegatedTokens,
+      delegatedThawingTokens,
       allocatedTokens: _allocatedTokens,
       queryFeeCut: _queryFeeCut,
       indexingRewardCut: _indexingRewardCut,
+      legacyIndexingRewardCut,
       ownStakeRatio: _ownStakeRatio,
       allocations,
+      provisions,
       totalAllocations,
     }: Indexer): IndexersRow => {
       const delegationPool = divideBy1e18(delegatedTokens);
+      const activeDelegationPool = Math.max(
+        0,
+        delegationPool - divideBy1e18(delegatedThawingTokens),
+      );
       const indexingRewardCut = divideBy1e6(_indexingRewardCut);
       const queryFeeCut = divideBy1e6(_queryFeeCut);
       const ownStakeRatio = Number(_ownStakeRatio);
@@ -346,26 +371,20 @@ export const transformToRows =
       const stakedTokens = divideBy1e18(_stakedTokens);
       const lockedTokens = divideBy1e18(_lockedTokens);
       const selfStaked = subtract(stakedTokens, lockedTokens);
-      const delegationRemaining = selfStaked * 16 - delegationPool;
-      const notAllocatedTokens =
-        selfStaked +
-        delegationPool +
-        (delegationRemaining < 0 ? delegationRemaining : 0) -
-        allocatedTokens;
+      const { delegationRemaining, availableToAllocate } =
+        getIndexerCapacity(provisions);
 
-      const { estFuturePercentReward } = getEstimatedRewards({
-        delegationPool,
-        delegationRemaining,
-        indexingRewardCut,
-        allocatedTokens: _allocatedTokens,
-        plannedDelegation: "0",
-        networkStats: {
-          networkGRTIssuancePerBlock,
-          totalTokensSignalled,
-          deniedToTotalSignalledRatio,
-        },
-        allocations,
-      });
+      const estFuturePercentReward = rewardParameters
+        ? getEstimatedRewards({
+            delegationPool: activeDelegationPool,
+            delegationRemaining: delegationRemaining ?? 0,
+            indexingRewardCut: divideBy1e6(legacyIndexingRewardCut),
+            allocatedTokens: _allocatedTokens,
+            plannedDelegation: "0",
+            networkStats: rewardParameters,
+            allocations,
+          }).estFuturePercentReward
+        : null;
 
       const numerator = allocations.reduce(
         (acc, { allocatedTokens, subgraphDeployment }) => {
@@ -386,7 +405,9 @@ export const transformToRows =
       );
 
       const denominator =
-        allocatedTokens + (notAllocatedTokens > 0 ? notAllocatedTokens : 0);
+        availableToAllocate === null
+          ? null
+          : allocatedTokens + availableToAllocate;
 
       // Calculate effective cuts using ownStakeRatio from API
       // Formula: 1 - (1 - cut) / (1 - ownStakeRatio)
@@ -408,8 +429,13 @@ export const transformToRows =
         allocatedTokens,
         delegationRemaining,
         historicApy: getHistoricApy(totalAllocations, PLANNED_PERIOD_DAYS),
-        estFuturePercentReward: delegationPool > 0 ? estFuturePercentReward : 0,
-        allocationsEffectiveness: denominator > 0 ? numerator / denominator : 0,
+        estFuturePercentReward,
+        allocationsEffectiveness:
+          denominator === null
+            ? null
+            : denominator > 0
+              ? numerator / denominator
+              : 0,
         allocationRate,
         queryFeeEffectiveCut:
           delegationPool > 0 ? calculatedQueryFeeEffectiveCut : null,
@@ -458,6 +484,9 @@ export const transformToCsvRow = ({
   [titles.allocatedTokens]: `${allocatedTokens} (${formatNumberToPercent(allocationRate)})`,
   [titles.delegationRemaining]: delegationRemaining,
   [titles.historicApy]: historicApy,
-  [titles.estFuturePercentReward]: `${formatNumberToPercent(estFuturePercentReward * 365)}`,
+  [titles.estFuturePercentReward]:
+    estFuturePercentReward === null
+      ? null
+      : formatNumberToPercent(estFuturePercentReward * 365),
   [titles.allocationsEffectiveness]: allocationsEffectiveness,
 });

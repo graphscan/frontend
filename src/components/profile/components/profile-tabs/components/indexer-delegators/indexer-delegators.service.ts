@@ -7,7 +7,6 @@ import {
   IndexerDelegatorsRow,
   transformToRow,
   transformToCsvRow,
-  mergeSplitDelegations,
 } from "./indexer-delegators.model";
 import { SortParams } from "../../../../../../model/sort.model";
 import { INDEXER_DELEGATORS_CACHE_KEY } from "../../../../../../services/indexer-delegators.service";
@@ -29,6 +28,12 @@ type IndexerDelegatorsParams = {
 const indexerDelegatorFragment = gql`
   fragment IndexerDelegatorFragment on DelegatedStake {
     id
+    isLegacy
+    provision {
+      id
+      delegatorShares
+      delegationExchangeRate
+    }
     delegator {
       id
     }
@@ -46,6 +51,7 @@ const indexerDelegatorFragment = gql`
       delegatorShares
       delegatedTokens
       delegatedThawingTokens
+      delegationExchangeRate
     }
   }
 `;
@@ -85,10 +91,7 @@ export const useIndexerDelegators = ({
       const delegatedStakes = await fetchAllConsecutively(
         createIndexerDelegatorsFetcher(id),
       );
-      const rows = compose(
-        map(transformToRow),
-        mergeSplitDelegations,
-      )(delegatedStakes);
+      const rows = delegatedStakes.map(transformToRow);
 
       return rows;
     },
@@ -134,10 +137,7 @@ export const useIndexerDelegatorsCsv = (
       const delegatedStakes = await fetchAllConsecutively(
         createIndexerDelegatorsFetcher(id),
       );
-      return compose(
-        map(transformToRow),
-        mergeSplitDelegations,
-      )(delegatedStakes);
+      return delegatedStakes.map(transformToRow);
     },
     { enabled: false },
   );

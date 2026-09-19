@@ -82,6 +82,7 @@ export const Indexers: React.FC<Props> = observer(({ searchTerm }) => {
           return indexer;
         }),
         networkStats,
+        rewardParameters: indexersData.rewardParameters,
       };
     }
 

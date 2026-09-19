@@ -59,8 +59,8 @@ export const useSubgraphVersion = (id: string) => {
               }
               versions(
                 first: ${REQUEST_LIMIT},
-                orderBy: "createdAt",
-                orderDirection: "desc"
+                orderBy: createdAt,
+                orderDirection: desc
                 where: {entityVersion: ${id.startsWith("0x") ? 1 : 2}}
               ) {
                 id
