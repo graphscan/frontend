@@ -18,7 +18,10 @@ import {
 import { Footer } from "../../../../../common/footer/footer.component";
 import { Exclamation } from "../../../../../common/exclamation/exclamation.component";
 import { TabPreloader } from "../../../../../common/tab-preloader/tab-preloader.component";
-import { formatNumber } from "../../../../../../utils/number.utils";
+import {
+  formatNumber,
+  formatTooltipNumber,
+} from "../../../../../../utils/number.utils";
 import { createTitleWithTooltipDescription } from "../../../../../../utils/table.utils";
 import {
   useTooltip,
@@ -89,6 +92,8 @@ export const IndexerDetails: React.FC<Props> = ({ id }) => {
     allocationsAboveCapacity,
     selfStaked,
     lockedTokens,
+    thawingTokens,
+    lockedAndThawingTokens,
     delegatedTokens,
     activeDelegatedTokens,
     delegatedThawingTokens,
@@ -190,7 +195,7 @@ export const IndexerDetails: React.FC<Props> = ({ id }) => {
               <Th>
                 {createTitleWithTooltipDescription(
                   "Self Stake",
-                  `The Indexer's deposited stake, which may be slashed for malicious or incorrect behavior.`,
+                  "Deposited self stake minus locked tokens. Includes Horizon thawing stake, which does not contribute to Allocation Capacity.",
                 )}
               </Th>
               <Td>
@@ -203,13 +208,15 @@ export const IndexerDetails: React.FC<Props> = ({ id }) => {
             <Tr>
               <Th>
                 {createTitleWithTooltipDescription(
-                  "Locked Tokens",
-                  `The current value of indexer's tokens locked in the graph protocol.`,
+                  "Locked/Thawing Tokens",
+                  "Indexer-owned tokens pending release: locked stake plus Horizon self stake thawing across services. Excludes delegators' thawing balances.",
                 )}
               </Th>
               <Td>
-                <span data-tip={tooltipNumberContent(lockedTokens)}>
-                  {formatNumber(lockedTokens)}
+                <span
+                  data-tip={`Total: ${formatTooltipNumber(lockedAndThawingTokens)} GRT<br />Locked: ${formatTooltipNumber(lockedTokens)} GRT<br />Horizon thawing: ${formatTooltipNumber(thawingTokens)} GRT`}
+                >
+                  {formatNumber(lockedAndThawingTokens)}
                 </span>
                 <Postfix> GRT</Postfix>
               </Td>

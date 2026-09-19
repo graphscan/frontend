@@ -48,6 +48,14 @@ export const transform = ({
 }: IndexerDetails) => {
   const stackedTokens = divideBy1e18(_stakedTokens);
   const lockedTokens = divideBy1e18(_lockedTokens);
+  const thawingWei = provisions.reduce(
+    (sum, provision) => sum + BigInt(provision.tokensThawing),
+    BigInt(0),
+  );
+  const thawingTokens = divideBy1e18(thawingWei.toString());
+  const lockedAndThawingTokens = divideBy1e18(
+    (BigInt(_lockedTokens) + thawingWei).toString(),
+  );
   const selfStaked = stackedTokens - lockedTokens;
   const delegatedTokens = divideBy1e18(_delegatedTokens);
   const delegatedThawingTokens = divideBy1e18(_delegatedThawingTokens);
@@ -78,6 +86,8 @@ export const transform = ({
     legacyAllocatedTokens: divideBy1e18(legacyAllocatedTokens),
     ...getIndexerCapacity(provisions),
     lockedTokens,
+    thawingTokens,
+    lockedAndThawingTokens,
     selfStaked,
     delegatedTokens,
     activeDelegatedTokens,
