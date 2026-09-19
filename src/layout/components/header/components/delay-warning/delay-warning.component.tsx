@@ -1,15 +1,19 @@
 import { Warning } from "../warning/warning.component";
+import { formatNodeDelay } from "../../../../../utils/node-delay.utils";
 
 type Props = {
-  delay: number;
+  delaySeconds: number;
   hasBorderBottom: boolean;
 };
 
-export const DelayWarning: React.FC<Props> = ({ delay, hasBorderBottom }) => {
+export const DelayWarning: React.FC<Props> = ({
+  delaySeconds,
+  hasBorderBottom,
+}) => {
   return (
     <Warning
-      title={`Graphscan data is delayed by ${delay} blocks.`}
-      description="Subgraph node is out of sync. Please check again soon."
+      title={`Graphscan data is delayed by ${formatNodeDelay(delaySeconds)}.`}
+      description="Recent activity may not appear yet. This notice updates automatically."
       hasBorderBottom={hasBorderBottom}
     />
   );
