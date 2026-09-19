@@ -214,6 +214,7 @@ export const IndexerDetails: React.FC<Props> = ({ id }) => {
               </Th>
               <Td>
                 <span
+                  data-html
                   data-tip={`Total: ${formatTooltipNumber(lockedAndThawingTokens)} GRT<br />Locked: ${formatTooltipNumber(lockedTokens)} GRT<br />Horizon thawing: ${formatTooltipNumber(thawingTokens)} GRT`}
                 >
                   {formatNumber(lockedAndThawingTokens)}
