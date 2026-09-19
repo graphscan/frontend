@@ -55,7 +55,7 @@ export const Header: React.FC<Props> = observer(({ isTechicalWorks }) => {
     <>
       {data && data.isDelayed && (
         <DelayWarning
-          delay={data.delay}
+          delaySeconds={data.delaySeconds}
           hasBorderBottom={Boolean(warningMessage)}
         />
       )}
