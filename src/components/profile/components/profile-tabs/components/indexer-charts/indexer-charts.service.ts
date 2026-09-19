@@ -144,7 +144,7 @@ const createIndexerAllocationsFetcher =
         skip: ${skip}
         where: { 
           indexer: ${JSON.stringify(id.toLowerCase())}
-          status: "Active"
+          status: Active
         }
       ) {
         id

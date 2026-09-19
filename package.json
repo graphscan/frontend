@@ -5,7 +5,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "npx serve out",
-    "prettier": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md,yml,yaml}\""
+    "prettier": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md,yml,yaml}\"",
+    "test": "node --test tests/*.test.cjs",
+    "check:subgraphs": "node scripts/check-subgraphs.mjs"
   },
   "type": "module",
   "dependencies": {

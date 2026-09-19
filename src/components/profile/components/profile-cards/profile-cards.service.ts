@@ -46,6 +46,11 @@ export const useAccount = (id: string) => {
               ) {
                 id
                 lockedTokens
+                provision {
+                  id
+                  delegatorShares
+                  delegationExchangeRate
+                }
                 shareAmount
                 stakedTokens
                 unstakedTokens
@@ -55,6 +60,7 @@ export const useAccount = (id: string) => {
                   delegatedTokens
                   delegatorShares
                   delegatedThawingTokens
+ delegationExchangeRate
                 }
               }
             }

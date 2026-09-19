@@ -1,3 +1,5 @@
+import { DelegationPoolSource } from "../../../../../../model/delegators.model";
+import { formatLockedUntil } from "../../../../../../utils/delegation-lock.utils";
 import { ColumnType } from "antd/es/table";
 import { DelegationTransaction } from "../../../../../../model/web3-transactions.model";
 import { divideBy1e18 } from "../../../../../../utils/number.utils";
@@ -9,14 +11,15 @@ import {
   renderDate,
   renderLockedUntil,
   formatTableDate,
-  formatLockedUntil,
 } from "../../../../../../utils/table.utils";
 import {
   calcStakeCurrentDelegation,
-  calcDelegationExchangeRate,
+  calcStakeUnrealizedRewards,
+  getDelegationPool,
 } from "../../../../../../utils/delegators.utils";
 
-export type DelegatorDelegation = {
+export type DelegatorDelegation = DelegationPoolSource & {
+  isLegacy: boolean;
   id: string;
   indexer: {
     id: string;
@@ -36,74 +39,8 @@ export type DelegatorDelegation = {
   lockedTokens: string;
 };
 
-/**
- * Gets the base delegation ID (delegator-indexer) without data service suffix.
- */
-const getBaseDelegationId = (id: string): string => {
-  const parts = id.split("-");
-  return parts.length > 2 ? `${parts[0]}-${parts[1]}` : id;
-};
-
-/**
- * Merges related delegatedStake entities that were split due to protocol upgrade.
- */
-export const mergeSplitDelegations = (
-  delegations: Array<DelegatorDelegation>,
-): Array<DelegatorDelegation> => {
-  const groupedByBase = new Map<string, Array<DelegatorDelegation>>();
-
-  for (const delegation of delegations) {
-    const baseId = getBaseDelegationId(delegation.id);
-    const group = groupedByBase.get(baseId) || [];
-    group.push(delegation);
-    groupedByBase.set(baseId, group);
-  }
-
-  const result: Array<DelegatorDelegation> = [];
-
-  groupedByBase.forEach((group, baseId) => {
-    if (group.length === 1) {
-      result.push(group[0]);
-    } else {
-      const primary =
-        group.find((d) => Number(d.shareAmount) > 0) ||
-        group.find((d) => d.id === baseId) ||
-        group[0];
-
-      const merged: DelegatorDelegation = {
-        id: baseId,
-        indexer: primary.indexer,
-        shareAmount: group
-          .reduce((sum, d) => sum + Number(d.shareAmount), 0)
-          .toString(),
-        personalExchangeRate: primary.personalExchangeRate,
-        stakedTokens: group
-          .reduce((sum, d) => sum + Number(d.stakedTokens), 0)
-          .toString(),
-        unstakedTokens: group
-          .reduce((sum, d) => sum + Number(d.unstakedTokens), 0)
-          .toString(),
-        createdAt: Math.min(...group.map((d) => d.createdAt)),
-        lastDelegatedAt:
-          group.find((d) => d.lastDelegatedAt !== null)?.lastDelegatedAt ??
-          null,
-        lastUndelegatedAt:
-          group.find((d) => d.lastUndelegatedAt !== null)?.lastUndelegatedAt ??
-          null,
-        lockedUntil: Math.max(...group.map((d) => d.lockedUntil)),
-        lockedTokens: group
-          .reduce((sum, d) => sum + Number(d.lockedTokens), 0)
-          .toString(),
-      };
-
-      result.push(merged);
-    }
-  });
-
-  return result;
-};
-
 export type DelegatorDelegationsRow = {
+  isLegacy: boolean;
   id: string;
   key: string;
   name: string | null;
@@ -121,7 +58,7 @@ export type DelegatorDelegationsRow = {
 };
 
 const titles: Record<
-  Exclude<keyof DelegatorDelegationsRow, "key" | "name">,
+  Exclude<keyof DelegatorDelegationsRow, "key" | "name" | "isLegacy">,
   string
 > = {
   id: "Indexer Address",
@@ -139,10 +76,18 @@ const titles: Record<
 };
 
 export const columnsWidth = {
-  "2560": [187, 133, 133, 133, 133, 133, 133, 133, 133, 226, 226, 226, 165, 165, 165],
-  "1920": [167, 115, 115, 115, 130, 115, 115, 115, 115, 202, 200, 200, 148, 148, 148],
-  "1440": [150, 110, 110, 110, 115, 110, 110, 110, 110, 180, 180, 180, 132, 132, 132],
-  "1280": [130, 100, 100, 100, 100, 100, 100, 100, 100, 155, 155, 155, 120, 120, 120],
+  "2560": [
+    187, 133, 133, 133, 133, 133, 133, 133, 133, 226, 226, 226, 165, 165, 165,
+  ],
+  "1920": [
+    167, 115, 115, 115, 130, 115, 115, 115, 115, 202, 200, 200, 148, 148, 148,
+  ],
+  "1440": [
+    150, 110, 110, 110, 115, 110, 110, 110, 110, 180, 180, 180, 132, 132, 132,
+  ],
+  "1280": [
+    130, 100, 100, 100, 100, 100, 100, 100, 100, 155, 155, 155, 120, 120, 120,
+  ],
 };
 
 export const createDelegatorDelegationsColumns = (): Array<
@@ -160,7 +105,7 @@ export const createDelegatorDelegationsColumns = (): Array<
   {
     title: createTitleWithTooltipDescription(
       titles.currentDelegationAmount,
-      "Size of delegation to indexer.",
+      "Active delegation, including accumulated rewards. Excludes tokens thawing for withdrawal.",
     ),
     dataIndex: "currentDelegationAmount",
     key: "currentDelegationAmount",
@@ -277,6 +222,9 @@ export const createDelegatorDelegationsColumns = (): Array<
 ];
 
 export const transformToRow = ({
+  isLegacy,
+  provision,
+  id: stakeId,
   indexer,
   shareAmount,
   personalExchangeRate,
@@ -287,16 +235,22 @@ export const transformToRow = ({
   lockedUntil,
   lockedTokens,
 }: DelegatorDelegation): DelegatorDelegationsRow => {
-  const { id, delegatorShares, defaultDisplayName } = indexer;
-  const currentDelegationAmount = divideBy1e18(
-    calcStakeCurrentDelegation({ shareAmount, indexer }),
+  const { id, defaultDisplayName } = indexer;
+  const poolShares = Number(
+    getDelegationPool({ indexer, provision }).delegatorShares,
   );
-
-  const exchangeRate = calcDelegationExchangeRate(indexer);
+  const currentDelegationAmount = divideBy1e18(
+    calcStakeCurrentDelegation({ shareAmount, indexer, provision }),
+  );
 
   // Unrealized Rewards = (delegationExchangeRate - personalExchangeRate) * shareAmount
   const unrealizedRewards = divideBy1e18(
-    (exchangeRate - Number(personalExchangeRate)) * Number(shareAmount),
+    calcStakeUnrealizedRewards({
+      shareAmount,
+      personalExchangeRate,
+      indexer,
+      provision,
+    }),
   );
 
   const stakedTokensValue = divideBy1e18(stakedTokens);
@@ -312,9 +266,10 @@ export const transformToRow = ({
   return {
     id,
     name: defaultDisplayName,
-    key: id,
+    key: stakeId,
+    isLegacy,
     currentDelegationAmount,
-    shareAmount: Number(shareAmount) / Number(delegatorShares),
+    shareAmount: poolShares === 0 ? 0 : Number(shareAmount) / poolShares,
     stakedTokens: stakedTokensValue,
     unstakedTokens: unstakedTokensValue,
     realizedRewards: realizedRewardsValue,
@@ -331,6 +286,7 @@ export const transformToRow = ({
 };
 
 export const transformToCsvRow = ({
+  isLegacy,
   id,
   name,
   currentDelegationAmount,
@@ -358,5 +314,5 @@ export const transformToCsvRow = ({
   [titles.lastUndelegatedAt]: lastUndelegatedAt
     ? formatTableDate(lastUndelegatedAt)
     : null,
-  [titles.lockedUntil]: formatLockedUntil(lockedUntil),
+  [titles.lockedUntil]: formatLockedUntil(lockedUntil, isLegacy),
 });

@@ -1,14 +1,13 @@
-import { add, divide, multiply, subtract, sum } from "ramda";
 import { NetworkStats } from "./network-stats.model";
-import { calculateDailyIssuance } from "../utils/daily-issuance.utils";
+import { calculateMaxDailyIssuance } from "../utils/daily-issuance.utils";
 import { getEnvVariables } from "../utils/env.utils";
-import { divideBy1e18 } from "../utils/number.utils";
 
 export const TECHNICAL_PARTNERS = getEnvVariables().partners;
 
 export type IndexersAllocation = {
   id: string;
   allocatedTokens: string;
+  provision: { id: string; indexingRewardsCut: string } | null;
   subgraphDeployment: {
     id: string;
     signalledTokens: string;
@@ -25,10 +24,8 @@ export type GetEstimatedRewardsParams = {
   plannedDelegation: string;
   networkStats: Pick<
     NetworkStats,
-    | "networkGRTIssuancePerBlock"
-    | "totalTokensSignalled"
-    | "deniedToTotalSignalledRatio"
-  >;
+    "networkGRTIssuancePerBlock" | "totalTokensSignalled"
+  > & { minimumSubgraphSignal?: string };
   allocations: Array<IndexersAllocation>;
 };
 
@@ -41,67 +38,52 @@ export const getEstimatedRewards = ({
   networkStats: {
     networkGRTIssuancePerBlock,
     totalTokensSignalled,
-    deniedToTotalSignalledRatio,
+    minimumSubgraphSignal = "0",
   },
   allocations,
 }: GetEstimatedRewardsParams) => {
-  const getIndexerReward = (extra: number) => {
-    let extraAllocation = extra;
-    const extraDelegationsRemaining = subtract(delegationRemaining, extra);
-
-    if (extraDelegationsRemaining < 0) {
-      extraAllocation = delegationRemaining < 0 ? 0 : delegationRemaining;
-    }
-
-    return sum(
-      allocations.map((a) => {
-        const subRate = divide(
-          Number(a.allocatedTokens),
-          Number(_allocatedTokens),
-        );
-        const subAllocatedTokens = add(
-          Number(a.allocatedTokens),
-          multiply(extraAllocation, subRate),
-        );
-        const subTotalAllocated = add(
-          Number(a.subgraphDeployment.stakedTokens),
-          multiply(extraAllocation, subRate),
-        );
-        const signaled = Number(a.subgraphDeployment.signalledTokens);
-        const part = (1e18 * signaled) / Number(totalTokensSignalled);
-
-        return a.subgraphDeployment.deniedAt > 0
-          ? 0
-          : multiply(
-              divide(subAllocatedTokens, subTotalAllocated),
-              multiply(
-                part,
-                calculateDailyIssuance({
-                  networkGRTIssuancePerBlock: Number(
-                    networkGRTIssuancePerBlock,
-                  ),
-                  deniedToTotalSignalledRatio,
-                }),
-              ),
-            );
-      }),
-    );
-  };
-
-  let estRewardsPerDay = 0;
-  let estFutureReward = 0;
-  let estFuturePercentReward = 0;
-
-  const futureDelegations = Number(plannedDelegation) + delegationPool;
-
-  if (futureDelegations > 0) {
-    estRewardsPerDay = multiply(
-      subtract(1, indexingRewardCut),
-      getIndexerReward(Number(plannedDelegation)),
-    );
-    estFuturePercentReward = divideBy1e18(estRewardsPerDay / futureDelegations);
-    estFutureReward = estFuturePercentReward * Number(plannedDelegation);
+  const planned = Math.max(0, Number(plannedDelegation));
+  const futureDelegations = planned + delegationPool;
+  const totalSignal = Number(totalTokensSignalled);
+  const totalAllocated = Number(_allocatedTokens);
+  if (futureDelegations <= 0 || totalSignal <= 0 || totalAllocated <= 0) {
+    return { estFuturePercentReward: 0, estFutureReward: 0 };
   }
+
+  // This is RewardsManager's allocated issuance, already reduced by the
+  // IssuanceAllocator (e.g. GIP-0089). Do not apply the 80% split again.
+  const dailyIssuance = calculateMaxDailyIssuance(
+    Number(networkGRTIssuancePerBlock),
+  );
+  const extraAllocation =
+    Math.min(planned, Math.max(0, delegationRemaining)) * 1e18;
+  const estRewardsPerDay = allocations.reduce((rewards, allocation) => {
+    const deployment = allocation.subgraphDeployment;
+    if (
+      deployment.deniedAt > 0 ||
+      Number(deployment.signalledTokens) < Number(minimumSubgraphSignal)
+    )
+      return rewards;
+
+    const extra =
+      (extraAllocation * Number(allocation.allocatedTokens)) / totalAllocated;
+    const deploymentStake = Number(deployment.stakedTokens) + extra;
+    if (deploymentStake <= 0) return rewards;
+
+    // The mappings normalize Horizon's on-chain delegator cut to the
+    // indexer's cut, despite the Provision schema's outdated description.
+    const cut = allocation.provision
+      ? Number(allocation.provision.indexingRewardsCut) / 1e6
+      : indexingRewardCut;
+    // Denied signal is already included in totalSignal. Excluding denied
+    // allocations above is sufficient; a second global discount is incorrect.
+    const signalShare = Number(deployment.signalledTokens) / totalSignal;
+    const allocationShare =
+      (Number(allocation.allocatedTokens) + extra) / deploymentStake;
+    return rewards + dailyIssuance * signalShare * allocationShare * (1 - cut);
+  }, 0);
+  const estFuturePercentReward = estRewardsPerDay / futureDelegations;
+  const estFutureReward = estFuturePercentReward * planned;
 
   return {
     estFuturePercentReward,

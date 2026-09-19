@@ -52,6 +52,11 @@ const delegatorFragment = gql`
       first: ${REQUEST_LIMIT}
     ) {
       id
+      provision {
+        id
+        delegatorShares
+        delegationExchangeRate
+      }
       shareAmount
       personalExchangeRate
       stakedTokens
@@ -61,6 +66,7 @@ const delegatorFragment = gql`
         delegatedTokens
         delegatorShares
         delegatedThawingTokens
+ delegationExchangeRate
       }
     }
   }

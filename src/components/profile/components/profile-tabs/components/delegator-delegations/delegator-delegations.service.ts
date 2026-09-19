@@ -7,7 +7,6 @@ import {
   DelegatorDelegationsRow,
   transformToRow,
   transformToCsvRow,
-  mergeSplitDelegations,
 } from "./delegator-delegations.model";
 import { SortParams } from "../../../../../../model/sort.model";
 import { DELEGATOR_DELEGATIONS_CACHE_KEY } from "../../../../../../services/delegator-delegations.service";
@@ -29,11 +28,18 @@ type DelegatorDelegationsParams = {
 const delegatorDelegationFragment = gql`
   fragment DelegatorDelegationFragment on DelegatedStake {
     id
+    isLegacy
+    provision {
+      id
+      delegatorShares
+      delegationExchangeRate
+    }
     indexer {
       id
       delegatorShares
       delegatedTokens
       delegatedThawingTokens
+      delegationExchangeRate
       defaultDisplayName
     }
     shareAmount
@@ -84,10 +90,7 @@ export const useDelegatorDelegations = ({
       const delegatedStakes = await fetchAllConsecutively(
         createDelegatorDelegationsFetcher(id),
       );
-      return compose(
-        map(transformToRow),
-        mergeSplitDelegations,
-      )(delegatedStakes);
+      return delegatedStakes.map(transformToRow);
     },
   );
 
@@ -131,10 +134,7 @@ export const useDelegatorDelegationsCsv = (
       const delegatedStakes = await fetchAllConsecutively(
         createDelegatorDelegationsFetcher(id),
       );
-      return compose(
-        map(transformToRow),
-        mergeSplitDelegations,
-      )(delegatedStakes);
+      return delegatedStakes.map(transformToRow);
     },
     { enabled: false },
   );

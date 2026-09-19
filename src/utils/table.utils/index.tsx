@@ -15,6 +15,7 @@ import { clampMiddle, isOverflow } from "../text.utils";
 import { handleTooltipLinkClick } from "../tooltip.utils";
 import { bs58encode } from "../bs58.utils";
 import { unixTimeToDateString } from "../date.utils";
+import { formatLockedUntil } from "../delegation-lock.utils";
 import { onImageLoadError } from "../image.utils";
 import { TECHNICAL_PARTNERS } from "../../model/indexers.model";
 import { SubgraphStates } from "../../model/subgraph-states.model";
@@ -38,15 +39,15 @@ export const renderDate = (date: number | null) =>
     </span>
   ) : null;
 
-export const renderLockedUntil = (value: number | null) =>
+export const renderLockedUntil = (
+  value: number | null,
+  row: { isLegacy: boolean },
+) =>
   value ? (
     <span className="ant-table-cell-monospaced-value">
-      {value < 1132 ? `${value} epoch` : formatTableDate(value)}
+      {formatLockedUntil(value, row.isLegacy)}
     </span>
   ) : null;
-
-export const formatLockedUntil = (value: number | null): string | null =>
-  value ? (value < 1132 ? `${value} epoch` : formatTableDate(value)) : null;
 
 export const createTitleWithTooltipDescription = (
   title: string,

@@ -36,7 +36,7 @@ const App = ({ Component, pageProps }: AppProps) => {
   }, []);
 
   const isThirdPartyOn =
-    typeof localStorage !== "undefined" &&
+    typeof window !== "undefined" &&
     localStorage.getItem(COOKIES_KEYS.kinds.thirdParty) === "true";
 
   return (

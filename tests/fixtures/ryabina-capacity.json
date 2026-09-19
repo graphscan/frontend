@@ -1,0 +1,29 @@
+{
+  "id": "0x9da1017766bfeb2835db4f811516eea68996538b",
+  "stakedTokens": "2697941564184171179882289",
+  "lockedTokens": "0",
+  "provisionedTokens": "2697941500000000000000000",
+  "thawingTokens": "0",
+  "allocatedTokens": "15485681322000000000000000",
+  "legacyAllocatedTokens": "0",
+  "delegatedTokens": "23486228800940118391335406",
+  "delegatedThawingTokens": "15830028129374660774244144",
+  "delegatedCapacity": "7656200671565457617091262",
+  "tokenCapacity": "10354142171565457617091262",
+  "availableStake": "-5131539150434542382908738",
+  "ownStakeRatio": "0.103037122298045540543990411792016",
+  "provisions": [
+    {
+      "id": "0x9da1017766bfeb2835db4f811516eea68996538b-0xb2bb92d0de618878e438b55d5846cfecd9301105",
+      "tokensProvisioned": "2697941500000000000000000",
+      "tokensThawing": "0",
+      "tokensAllocated": "15485681322000000000000000",
+      "delegatedTokens": "23486228800940118391335406",
+      "delegatedThawingTokens": "15830028129374660774244144",
+      "dataService": {
+        "id": "0xb2bb92d0de618878e438b55d5846cfecd9301105",
+        "delegationRatio": 16
+      }
+    }
+  ]
+}

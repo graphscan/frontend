@@ -27,6 +27,11 @@ export const useDelegatorDetails = (id: string) => {
               first: ${REQUEST_LIMIT}
             ) {
               id
+              provision {
+                id
+                delegatorShares
+                delegationExchangeRate
+              }
               shareAmount
               personalExchangeRate
               stakedTokens
@@ -38,6 +43,7 @@ export const useDelegatorDetails = (id: string) => {
                 delegatedTokens
                 delegatorShares
                 delegatedThawingTokens
+ delegationExchangeRate
               }
             }
           }

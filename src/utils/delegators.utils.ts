@@ -1,36 +1,23 @@
 import {
   DelegatedStake,
   DelegatedStakeExtended,
+  DelegationPoolSource,
 } from "../model/delegators.model";
 
-type IndexerForExchangeRate = Pick<
-  DelegatedStake["indexer"],
-  "delegatedTokens" | "delegatedThawingTokens" | "delegatorShares"
+type CurrentDelegationStake = Pick<
+  DelegatedStake,
+  "shareAmount" | "indexer" | "provision"
 >;
 
-/**
- * Manually calculates delegationExchangeRate because the subgraph value
- * does not account for thawing tokens.
- * Formula: (delegatedTokens - delegatedThawingTokens) / delegatorShares
- */
-export const calcDelegationExchangeRate = (indexer: IndexerForExchangeRate) => {
-  const shares = Number(indexer.delegatorShares);
-  if (shares === 0) return 0;
-  return (
-    (Number(indexer.delegatedTokens) -
-      Number(indexer.delegatedThawingTokens)) /
-    shares
-  );
-};
-
-type CurrentDelegationStake = Pick<DelegatedStake, "shareAmount" | "indexer">;
-
-export const calcStakeCurrentDelegation = ({
-  shareAmount,
+// Horizon shares belong to a provision; legacy stakes use the indexer's pool.
+export const getDelegationPool = ({
+  provision,
   indexer,
-}: CurrentDelegationStake) => {
-  return Number(shareAmount) * calcDelegationExchangeRate(indexer);
-};
+}: DelegationPoolSource) => provision ?? indexer;
+
+export const calcStakeCurrentDelegation = (stake: CurrentDelegationStake) =>
+  Number(stake.shareAmount) *
+  Number(getDelegationPool(stake).delegationExchangeRate);
 
 export const calcCurrentDelegation = (stakes: Array<CurrentDelegationStake>) =>
   stakes.reduce((acc, stake) => acc + calcStakeCurrentDelegation(stake), 0);
@@ -42,8 +29,9 @@ export const calcStakeUnrealizedRewardsLegacy = ({
   unstakedTokens,
   realizedRewards,
   indexer,
+  provision,
 }: Omit<DelegatedStake, "id">) =>
-  calcStakeCurrentDelegation({ shareAmount, indexer }) +
+  calcStakeCurrentDelegation({ shareAmount, indexer, provision }) +
   (Number(unstakedTokens) - Number(realizedRewards)) -
   Number(stakedTokens);
 
@@ -58,18 +46,20 @@ export const calcStakeUnrealizedRewards = ({
   shareAmount,
   personalExchangeRate,
   indexer,
+  provision,
 }: Pick<
   DelegatedStakeExtended,
-  "shareAmount" | "personalExchangeRate" | "indexer"
+  "shareAmount" | "personalExchangeRate" | "indexer" | "provision"
 >) =>
-  (calcDelegationExchangeRate(indexer) - Number(personalExchangeRate)) *
+  (Number(getDelegationPool({ indexer, provision }).delegationExchangeRate) -
+    Number(personalExchangeRate)) *
   Number(shareAmount);
 
 export const calcUnrealizedRewards = (
   stakes: Array<
     Pick<
       DelegatedStakeExtended,
-      "shareAmount" | "personalExchangeRate" | "indexer"
+      "shareAmount" | "personalExchangeRate" | "indexer" | "provision"
     >
   >,
 ) => stakes.reduce((acc, stake) => acc + calcStakeUnrealizedRewards(stake), 0);
@@ -78,7 +68,7 @@ export const calcUnrealizedRewards = (
 export const calcStakeTotalRewards = (
   stake: Pick<
     DelegatedStake,
-    "shareAmount" | "stakedTokens" | "unstakedTokens" | "indexer"
+    "shareAmount" | "stakedTokens" | "unstakedTokens" | "indexer" | "provision"
   >,
 ) => {
   const currentDelegation = calcStakeCurrentDelegation(stake);
@@ -93,7 +83,11 @@ export const calcTotalRewards = (
   stakes: Array<
     Pick<
       DelegatedStake,
-      "shareAmount" | "stakedTokens" | "unstakedTokens" | "indexer"
+      | "shareAmount"
+      | "stakedTokens"
+      | "unstakedTokens"
+      | "indexer"
+      | "provision"
     >
   >,
 ) => stakes.reduce((acc, stake) => acc + calcStakeTotalRewards(stake), 0);

@@ -1,3 +1,4 @@
+import { DelegationPoolSource } from "../../../../../../model/delegators.model";
 import { formatTableDate } from "../../../../../../utils/table.utils";
 import { divideBy1e18 } from "../../../../../../utils/number.utils";
 import {
@@ -6,7 +7,7 @@ import {
   calcUnrealizedRewards,
 } from "../../../../../../utils/delegators.utils";
 
-type DelegatorDetailsStake = {
+type DelegatorDetailsStake = DelegationPoolSource & {
   id: string;
   shareAmount: string;
   personalExchangeRate: string;
