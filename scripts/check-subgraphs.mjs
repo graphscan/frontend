@@ -46,6 +46,7 @@ async function request(backend, query) {
 }
 
 const schemas = {};
+const metadata = {};
 for (const backend of Object.keys(endpoints)) {
   const meta = (
     await request(
@@ -57,6 +58,7 @@ for (const backend of Object.keys(endpoints)) {
   console.log(
     `${backend}: ${meta.deployment}, block ${meta.block.number}, ${new Date(meta.block.timestamp * 1000).toISOString()}`,
   );
+  metadata[backend] = meta;
   schemas[backend] = buildClientSchema(
     await request(backend, getIntrospectionQuery()),
   );
@@ -124,12 +126,19 @@ function context(file) {
     skip: 0,
     perPage: 2,
     currentPage: 1,
-    PLANNED_PERIOD_DAYS: 60,
-    getHistoricApyPeriod: (days) =>
-      Math.floor(Date.now() / 1000) - days * 86400,
     indexerId: sample.indexers[0].id,
     indexer: { id: sample.indexers[0].id },
-    blockNumber: sample._meta.block.number,
+    blockNumber:
+      file === "services/historic-apy.service.ts"
+        ? metadata.ANALYTICS.block.number
+        : sample._meta.block.number,
+    ...Object.fromEntries(
+      [0, 30, 60, 180, 360].map((days) => [
+        days === 0 ? "endTimestamp" : `start${days}`,
+        Math.floor(metadata.ANALYTICS.block.timestamp / 86400) * 86400 -
+          days * 86400,
+      ]),
+    ),
     subgraphId: sample.subgraphs[0].id,
     deploymentId: version.subgraphDeployment.id,
     versionId: version.id,
