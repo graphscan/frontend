@@ -1,6 +1,11 @@
 import { makeObservable, observable, computed, action, toJS } from "mobx";
 import { SortParams } from "./sort.model";
 import { DEFAULT_PER_PAGE_OPTIONS } from "./pagination.model";
+import {
+  readLocalStorage,
+  writeLocalStorage,
+  removeLocalStorage,
+} from "../utils/browser-storage.utils";
 
 export class TableViewModel<Row> {
   _currentPage: number;
@@ -39,7 +44,10 @@ export class TableViewModel<Row> {
     this.perPageOptions = perPageOptions ?? DEFAULT_PER_PAGE_OPTIONS;
 
     const perPage = this.storageManager.getStoragePerPage();
-    if (perPage) {
+    if (
+      perPage &&
+      this.perPageOptions.some((option) => option.value === perPage)
+    ) {
       this.perPageOptions = this.perPageOptions.map((o) => ({
         ...o,
         checked: o.value === perPage,
@@ -117,38 +125,31 @@ class TableStorageManager<Row> {
   }
 
   getStoragePerPage = () => {
-    const perPage =
-      typeof window !== "undefined"
-        ? Number(
-            localStorage.getItem(
-              `${this.perPageKey}${this.id ? `-${this.id}` : ""}`,
-            ),
-          )
-        : null;
-
-    return perPage;
+    return Number(
+      readLocalStorage(`${this.perPageKey}${this.id ? `-${this.id}` : ""}`),
+    );
   };
 
   getStorageCurrentPage = () => {
-    const currentPage =
-      typeof window !== "undefined"
-        ? Number(
-            localStorage.getItem(
-              `${this.currentPageKey}${this.id ? `-${this.id}` : ""}`,
-            ),
-          )
-        : NaN;
-
-    return currentPage > 0 ? currentPage : null;
+    const currentPage = Number(
+      readLocalStorage(`${this.currentPageKey}${this.id ? `-${this.id}` : ""}`),
+    );
+    return Number.isSafeInteger(currentPage) && currentPage > 0
+      ? currentPage
+      : null;
   };
 
   getStorageSortParams = (): SortParams<Row> | null => {
-    const sortValue =
-      typeof window !== "undefined"
-        ? localStorage.getItem(`${this.sortKey}${this.id ? `-${this.id}` : ""}`)
-        : null;
+    const sortValue = readLocalStorage(
+      `${this.sortKey}${this.id ? `-${this.id}` : ""}`,
+    );
     try {
-      return sortValue ? JSON.parse(sortValue) : null;
+      const value = sortValue ? JSON.parse(sortValue) : null;
+      return value &&
+        typeof value.orderBy === "string" &&
+        (value.orderDirection === "asc" || value.orderDirection === "desc")
+        ? value
+        : null;
     } catch {
       return null;
     }
@@ -157,14 +158,14 @@ class TableStorageManager<Row> {
   setStoragePerPage = (perPage: number | null) => {
     const key = `${this.perPageKey}${this.id ? `-${this.id}` : ""}`;
     if (perPage) {
-      localStorage.setItem(key, String(perPage));
+      writeLocalStorage(key, String(perPage));
     } else {
-      localStorage.removeItem(key);
+      removeLocalStorage(key);
     }
   };
 
   setStorageCurrentPage = (currentPage: number) => {
-    localStorage.setItem(
+    writeLocalStorage(
       `${this.currentPageKey}${this.id ? `-${this.id}` : ""}`,
       String(currentPage),
     );
@@ -173,9 +174,9 @@ class TableStorageManager<Row> {
   setStorageSortParams = (sortParams: SortParams<Row> | null) => {
     const key = `${this.sortKey}${this.id ? `-${this.id}` : ""}`;
     if (sortParams) {
-      localStorage.setItem(key, JSON.stringify(sortParams));
+      writeLocalStorage(key, JSON.stringify(sortParams));
     } else {
-      localStorage.removeItem(key);
+      removeLocalStorage(key);
     }
   };
 }

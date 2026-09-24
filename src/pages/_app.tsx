@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { configure } from "mobx";
 import Head from "next/head";
@@ -7,8 +6,7 @@ import { Layout } from "../layout/layout.component";
 import { GlobalStyles } from "../styles/styles";
 import { Fonts } from "../styles/fonts";
 import { Tooltip } from "../components/tooltip/tooltip.component";
-import { COOKIES_KEYS } from "../model/cookies.model";
-import { HISTORY_APY_REQUEST_TIME_STORAGE_KEY } from "../model/indexers.model";
+import { ApplicationErrorBoundary } from "../components/common/application-error-boundary/application-error-boundary.component";
 
 configure({
   enforceActions: "observed",
@@ -28,19 +26,8 @@ const queryClient = new QueryClient({
 });
 
 const App = ({ Component, pageProps }: AppProps) => {
-  useEffect(() => {
-    sessionStorage.setItem(
-      HISTORY_APY_REQUEST_TIME_STORAGE_KEY,
-      String(Date.now()),
-    );
-  }, []);
-
-  const isThirdPartyOn =
-    typeof window !== "undefined" &&
-    localStorage.getItem(COOKIES_KEYS.kinds.thirdParty) === "true";
-
   return (
-    <>
+    <ApplicationErrorBoundary>
       <Head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -88,7 +75,7 @@ const App = ({ Component, pageProps }: AppProps) => {
       <Fonts />
       <GlobalStyles />
       <Tooltip />
-    </>
+    </ApplicationErrorBoundary>
   );
 };
 

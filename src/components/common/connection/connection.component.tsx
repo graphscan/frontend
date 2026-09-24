@@ -27,6 +27,11 @@ import { Glow } from "../glow/glow.component";
 import { RobohashImage } from "../robohash-image/robohash-image.component";
 import { Spinner } from "../spinner/spinner.component";
 import { clampMiddle } from "../../../utils/text.utils";
+import {
+  readLocalStorage,
+  writeLocalStorage,
+  removeLocalStorage,
+} from "../../../utils/browser-storage.utils";
 
 type Props = {
   showGlow?: boolean;
@@ -36,14 +41,14 @@ const CONNECTED_ACCOUNT_KEY = "connected-account-v1";
 
 function saveAccount(addr: string | null) {
   if (addr) {
-    localStorage.setItem(CONNECTED_ACCOUNT_KEY, addr);
+    writeLocalStorage(CONNECTED_ACCOUNT_KEY, addr);
   } else {
-    localStorage.removeItem(CONNECTED_ACCOUNT_KEY);
+    removeLocalStorage(CONNECTED_ACCOUNT_KEY);
   }
 }
 
 function getSavedAccount() {
-  return localStorage.getItem(CONNECTED_ACCOUNT_KEY);
+  return readLocalStorage(CONNECTED_ACCOUNT_KEY);
 }
 // TODO: if we want real interactions with wallet we need to rewrite everything to support modern providers and probably switch to viem.
 // and refactor evertything to more complex
