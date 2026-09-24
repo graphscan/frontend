@@ -68,6 +68,21 @@ export const Icon = styled.div`
   }
 `;
 
+export const ConnectionError = styled.p`
+  position: absolute;
+  right: 0;
+  top: calc(100% + 12px);
+  width: 250px;
+  max-width: calc(100vw - 32px);
+  padding: 12px;
+  border-radius: 6px;
+  background: #243855;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.4;
+  z-index: 10;
+`;
+
 export const Connected = styled(TextButton)`
   display: flex;
   justify-content: flex-end;

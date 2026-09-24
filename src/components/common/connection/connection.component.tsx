@@ -20,6 +20,7 @@ import {
   Heading,
   Disconnect,
   SpinnerContainer,
+  ConnectionError,
 } from "./connection.styled";
 import { LockWallets } from "./components/lock-wallets/lock-wallets.component";
 import { AccountButtons } from "../account-buttons/account-buttons.component";
@@ -32,6 +33,11 @@ import {
   writeLocalStorage,
   removeLocalStorage,
 } from "../../../utils/browser-storage.utils";
+import {
+  getWalletProvider,
+  requestWalletAccounts,
+  watchWalletAccounts,
+} from "../../../utils/wallet-provider.utils";
 
 type Props = {
   showGlow?: boolean;
@@ -56,6 +62,7 @@ export const Connection: React.FC<Props> = observer(({ showGlow = true }) => {
   const { currentAddress, setCurrentAddress } = connectionViewModel;
 
   const [showMenu, setShowMenu] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const toggleMenu = useCallback(
     () => setShowMenu((prevState) => !prevState),
     [],
@@ -68,46 +75,60 @@ export const Connection: React.FC<Props> = observer(({ showGlow = true }) => {
 
   // Restore connection on mount only if we have a saved account
   useEffect(() => {
-    if (!window.ethereum) return;
+    const provider = getWalletProvider();
+    if (!provider) return;
+
+    let stopped = false;
+    let accountsChanged = false;
+    const stopWatching = watchWalletAccounts(
+      provider,
+      () => connectionViewModel.currentAddress,
+      (address) => {
+        accountsChanged = true;
+        setCurrentAddress(address);
+      },
+    );
 
     const saved = getSavedAccount();
     if (saved) {
-      window.ethereum
-        .request({ method: "eth_accounts" })
-        .then((accounts: string[]) => {
-          if (
-            accounts.some(
-              (a: string) => a.toLowerCase() === saved.toLowerCase(),
-            )
-          ) {
+      const initialAddress = connectionViewModel.currentAddress;
+      void requestWalletAccounts(provider, "eth_accounts").then((accounts) => {
+        if (
+          !stopped &&
+          !accountsChanged &&
+          connectionViewModel.currentAddress === initialAddress &&
+          accounts !== null
+        ) {
+          if (accounts.some((a) => a.toLowerCase() === saved.toLowerCase())) {
             setCurrentAddress(saved);
           } else {
             setCurrentAddress(null);
           }
-        });
+        }
+      });
     }
 
-    const handleAccountsChanged = (accounts: string[]) => {
-      if (accounts.length > 0) {
-        setCurrentAddress(accounts[0]);
-      } else {
-        setCurrentAddress(null);
-      }
-    };
-
-    window.ethereum.on("accountsChanged", handleAccountsChanged);
-
     return () => {
-      window.ethereum?.removeListener("accountsChanged", handleAccountsChanged);
+      stopped = true;
+      stopWatching();
     };
   }, []);
 
   const connect = useCallback(async () => {
-    if (!window.ethereum) return;
-
-    const accounts: string[] = await window.ethereum.request({
-      method: "eth_requestAccounts",
-    });
+    setConnectionError(null);
+    const provider = getWalletProvider();
+    if (!provider) {
+      setConnectionError("No wallet detected in this browser.");
+      return;
+    }
+    const accounts = await requestWalletAccounts(
+      provider,
+      "eth_requestAccounts",
+    );
+    if (accounts === null) {
+      setConnectionError("Couldn't connect to your wallet. Please try again.");
+      return;
+    }
     if (accounts.length > 0) {
       setCurrentAddress(accounts[0]);
     }
@@ -152,6 +173,9 @@ export const Connection: React.FC<Props> = observer(({ showGlow = true }) => {
           </Icon>
           Connect
         </Button>
+      )}
+      {connectionError && !active && (
+        <ConnectionError role="status">{connectionError}</ConnectionError>
       )}
       {typeof id === "string" && showMenu && (
         <>
