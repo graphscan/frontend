@@ -4,6 +4,11 @@ import { ColumnType } from "antd/es/table";
 import { Checkbox } from "./components/checkbox/checkbox.component";
 import { comparator } from "./comparator.utils";
 import { SortParams } from "../../model/sort.model";
+import {
+  readLocalStorage,
+  writeLocalStorage,
+  removeLocalStorage,
+} from "../browser-storage.utils";
 
 type Params<T> = {
   initialColumns: Array<ColumnType<T>>;
@@ -25,12 +30,12 @@ export const useFavouriteColumn = <T extends { id: string }>({
   const [isFavouritesFixed, setIsFavouritesFixed] = useState(true);
 
   useEffect(() => {
-    const favs = localStorage.getItem(favouriteStorageKey);
+    const favs = readLocalStorage(favouriteStorageKey);
     if (favs) {
       try {
         setFavourites(new Map(JSON.parse(favs)));
       } catch {
-        localStorage.removeItem(favouriteStorageKey);
+        removeLocalStorage(favouriteStorageKey);
       }
     }
   }, [favouriteStorageKey]);
@@ -40,12 +45,10 @@ export const useFavouriteColumn = <T extends { id: string }>({
       setFavourites((prevState) => {
         e.target.checked ? prevState.set(id, Date.now()) : prevState.delete(id);
 
-        if (typeof localStorage !== "undefined") {
-          localStorage.setItem(
-            favouriteStorageKey,
-            JSON.stringify(Array.from(prevState)),
-          );
-        }
+        writeLocalStorage(
+          favouriteStorageKey,
+          JSON.stringify(Array.from(prevState)),
+        );
 
         return new Map(prevState);
       });
