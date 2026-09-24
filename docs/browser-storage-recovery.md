@@ -3,7 +3,8 @@
 The September 24, 2026 report showed the generic Next.js client-side exception
 page in Android Brave at `/#indexers`. That screen does not identify the original
 exception. Normal desktop Brave and its Pixel 7 emulation loaded the production
-site; the exact exception on the reporting phone remains unconfirmed.
+site; the exact exception on the reporting phone was initially unknown. A later
+screenshot identified the wallet-provider failure described below.
 
 ## Confirmed failure and fix
 
@@ -38,6 +39,36 @@ uncaught errors outside that component lifecycle.
   all 189 indexers and successfully advanced to page 2.
 
 Mobile emulation is not a substitute for verification on the affected Android
-device. If that device still fails after updating, the recovery screen's error
-details can help distinguish another runtime failure from the confirmed storage
-failure.
+device.
+
+## Follow-up: confirmed wallet-provider failure
+
+The recovery screen captured a `TypeError` from an injected Proxy: reading its
+immutable `on` property returned a different function, violating JavaScript's
+Proxy invariants. The supplied stack points to line 859, column 329 of production
+chunk `d4e96052ba9fa26c.js`, at the connection component's unconditional
+`window.ethereum.on("accountsChanged", ...)` call. This ran on mount even when
+the visitor never clicked Connect. The stack identifies the failing integration;
+it does not identify which browser or wallet layer created the faulty Proxy.
+
+Provider discovery, requests, subscription and cleanup now tolerate exceptions
+from property reads as well as calls. Normal providers still use account-change
+events. If subscribing fails, a visible, connected page checks `eth_accounts`
+every 15 seconds and on focus. The first valid result establishes a baseline;
+later changes update the account. Unchanged results preserve a selected lock
+wallet. Disconnected visitors do not trigger this polling, and only clicking
+Connect calls `eth_requestAccounts`.
+
+Invalid account payloads and rejected requests are handled without crashing.
+Failed Connect requests display a local message; stale restoration/poll results
+cannot overwrite a newer account change or update an unmounted component.
+
+Ten regression tests reproduce the immutable-property Proxy failure, exercise
+the actual connection component, and cover healthy providers, account changes,
+cleanup, rejected requests and the fallback. The complete suite has 71 tests.
+
+The production build also passed. A local browser harness substituted the same
+faulty fixture provider into both bundles (without changing the installed
+wallet). In native Brave's Pixel 7 emulation, the previous bundle reproduced the
+reported error. The corrected bundle loaded 189 indexers, showed an inline
+message when the fixture rejected Connect, and still advanced to page 2.
